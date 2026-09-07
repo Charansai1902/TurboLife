@@ -1,0 +1,27 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# OS Specific
+.DS_Store
+Thumbs.db
+
+# Streamlit local state
+.streamlit/
+
+# Large dataset raw zip files (preserve .txt files)
+*.zip
+*.tar.gz
+
+# Retain directory structure with .gitkeep
+!.gitkeep
