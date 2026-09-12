@@ -1,12 +1,13 @@
 """
 Streamlit Web Dashboard for TurboLife AI.
 Refined Turbofan Engine RUL Command Center & Predictive Maintenance Platform.
-Optimized for 1440px desktop displays with balanced typography, clean visual hierarchy,
-and structured 3-tab analytical workflows.
+Optimized with Streamlit @st.cache_resource and @st.cache_data for instant sub-second re-renders,
+zero redundant model reloads, and persistent fleet-level inference caching.
 """
 
 import os
 import sys
+from io import BytesIO
 
 # Ensure config is imported first to set project-isolated environment variables
 import config
@@ -30,7 +31,7 @@ st.set_page_config(
     page_title="TurboLife AI – Turbofan Engine RUL Command Center",
     page_icon="✈️",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="auto",
 )
 
 # Custom High-End Aviation CSS Theme
@@ -50,10 +51,33 @@ st.markdown(
         visibility: hidden !important;
     }
 
-    /* Keep Sidebar visible, styled, and expanded by default */
+    /* Force Dark Color Rendering Globally Across Browser & System Modes */
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"],
+    [data-testid="stHeader"], [data-testid="stToolbar"],
+    [data-testid="stMain"], .stApp {
+        background: #060a14 !important;
+        color: #e8efff !important;
+        color-scheme: dark !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Fix Streamlit Top Header/Toolbar: Never White */
+    header[data-testid="stHeader"],
+    [data-testid="stHeader"],
+    [data-testid="stToolbar"] {
+        background-color: #060a14 !important;
+        border-bottom: 1px solid #16233d !important;
+    }
+
+    /* Keep Sidebar visible, styled, and responsive */
     section[data-testid="stSidebar"] {
         background-color: #090e1a !important;
         border-right: 1px solid #182338 !important;
+        color: #e8efff !important;
+    }
+    section[data-testid="stSidebar"] * {
+        color-scheme: dark !important;
     }
 
     /* Ensure Collapse / Expand toggle buttons are styled in cyan and visible */
@@ -64,28 +88,44 @@ st.markdown(
         color: #38bdf8 !important;
     }
 
-    /* Global Background & Font */
+    /* Global Typography */
     .stApp {
-        background-color: #080c14;
-        color: #f1f5f9;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* Balanced 1440px Desktop Content Container */
-    .block-container {
-        padding-top: 1.6rem !important;
-        padding-bottom: 3rem !important;
-        padding-left: 2.4rem !important;
-        padding-right: 2.4rem !important;
-        max-width: 1480px;
+    /* Responsive Main Content Container */
+    @media (min-width: 769px) {
+        .block-container {
+            padding-top: 1.6rem !important;
+            padding-bottom: 3rem !important;
+            padding-left: 2.4rem !important;
+            padding-right: 2.4rem !important;
+            max-width: 1480px;
+        }
+    }
+    @media (max-width: 768px) {
+        .block-container {
+            padding-top: 1rem !important;
+            padding-bottom: 2.2rem !important;
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+            max-width: 100% !important;
+        }
+        section[data-testid="stSidebar"] {
+            width: 88vw !important;
+            min-width: 88vw !important;
+            max-width: 95vw !important;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.6) !important;
+            z-index: 999999 !important;
+        }
     }
 
     /* Sidebar Content Spacing & Grouped Panels */
     [data-testid="stSidebar"] .block-container {
-        padding-top: 1.6rem !important;
+        padding-top: 1.4rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 1.2rem !important;
-        padding-right: 1.2rem !important;
+        padding-left: 1.1rem !important;
+        padding-right: 1.1rem !important;
     }
     [data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"] {
         background: #0d1527;
@@ -114,7 +154,7 @@ st.markdown(
         line-height: 1.45;
     }
 
-    /* Header Card - Curved Flight Path & Aerospace Glow */
+    /* Header Card - Curved Flight Path & Responsive Stacking */
     .header-bar {
         position: relative;
         background: radial-gradient(ellipse at 18% 30%, rgba(56, 189, 248, 0.09) 0%, transparent 60%), linear-gradient(135deg, #101a2e 0%, #0c1322 100%);
@@ -147,6 +187,11 @@ st.markdown(
         align-items: center;
         gap: 18px;
     }
+    .header-brand-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
     .header-icon-badge {
         width: 48px;
         height: 48px;
@@ -176,12 +221,6 @@ st.markdown(
         color: #38bdf8;
         letter-spacing: -0.3px;
         line-height: 1.2;
-    }
-    .header-divider {
-        color: #475569;
-        font-weight: 300;
-        margin: 0 10px;
-        font-size: 1.3rem;
     }
     .header-subtitle {
         font-size: 1.15rem;
@@ -228,6 +267,59 @@ st.markdown(
         flex-shrink: 0;
     }
 
+    /* Desktop Subtitle Divider */
+    @media (min-width: 769px) {
+        .header-subtitle::before {
+            content: "|";
+            color: #475569;
+            font-weight: 300;
+            margin-right: 12px;
+            margin-left: 2px;
+        }
+    }
+
+    /* Mobile Header Stacking */
+    @media (max-width: 768px) {
+        .header-bar {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            padding: 20px 16px 18px 16px !important;
+            min-height: auto !important;
+            gap: 14px !important;
+        }
+        .header-content-left {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 10px !important;
+            width: 100% !important;
+        }
+        .header-brand-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            width: 100% !important;
+        }
+        .header-main-title {
+            font-size: 1.5rem !important;
+        }
+        .header-subtitle {
+            font-size: 1rem !important;
+        }
+        .header-desc-line {
+            font-size: 0.84rem !important;
+        }
+        .header-status-slot {
+            width: 100% !important;
+            display: flex !important;
+            justify-content: flex-start !important;
+        }
+        .status-pill-online, .status-pill-offline {
+            width: 100% !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+    }
+
     /* Tab Page Headers */
     .tab-header-box {
         margin-bottom: 20px;
@@ -245,6 +337,14 @@ st.markdown(
         color: #94a3b8;
         line-height: 1.45;
     }
+    @media (max-width: 768px) {
+        .tab-main-heading {
+            font-size: 1.25rem !important;
+        }
+        .tab-sub-heading {
+            font-size: 0.86rem !important;
+        }
+    }
 
     /* Fleet KPI Summary Cards */
     .kpi-card {
@@ -260,6 +360,7 @@ st.markdown(
         display: flex;
         flex-direction: column;
         justify-content: center;
+        box-sizing: border-box;
     }
     .kpi-card::before {
         content: "";
@@ -293,6 +394,39 @@ st.markdown(
         margin-top: 2px;
     }
 
+    /* Mobile KPI Card 2x2 Grid Conversion */
+    @media (max-width: 768px) {
+        div[data-testid="stHorizontalBlock"]:has(.kpi-card) {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+            width: 100% !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(.kpi-card) > div[data-testid="column"] {
+            width: 100% !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+        }
+        .kpi-card {
+            padding: 14px 14px !important;
+            min-height: 84px !important;
+        }
+        .kpi-val {
+            font-size: 1.6rem !important;
+        }
+        .kpi-label {
+            font-size: 0.8rem !important;
+        }
+        .kpi-sub {
+            font-size: 0.72rem !important;
+        }
+    }
+    @media (max-width: 380px) {
+        div[data-testid="stHorizontalBlock"]:has(.kpi-card) {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
     /* Selected Engine Diagnostic Header Banner */
     .engine-overview-box {
         background: #131d31;
@@ -309,6 +443,8 @@ st.markdown(
         display: flex;
         align-items: center;
         justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
     }
 
     /* Primary 4 Metric Cards for Selected Engine */
@@ -323,6 +459,7 @@ st.markdown(
         display: flex;
         flex-direction: column;
         justify-content: center;
+        box-sizing: border-box;
     }
     .engine-metric-label {
         font-size: 0.84rem;
@@ -341,6 +478,28 @@ st.markdown(
         font-size: 0.8rem;
         color: #94a3b8;
         margin-top: 2px;
+    }
+
+    /* Mobile Single-Column Stack for Metric Units */
+    @media (max-width: 768px) {
+        div[data-testid="stHorizontalBlock"]:has(.engine-metric-unit) {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            width: 100% !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(.engine-metric-unit) > div[data-testid="column"] {
+            width: 100% !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+        }
+        .engine-metric-unit {
+            padding: 14px 16px !important;
+            min-height: auto !important;
+        }
+        .engine-metric-val {
+            font-size: 1.45rem !important;
+        }
     }
 
     /* Dedicated Evaluation Details Panel */
@@ -376,6 +535,20 @@ st.markdown(
         color: #94a3b8;
         font-size: 0.8rem;
         font-style: italic;
+    }
+    @media (max-width: 768px) {
+        .evaluation-panel {
+            padding: 12px 14px !important;
+        }
+        .eval-metrics-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 6px !important;
+            font-size: 0.85rem !important;
+        }
+        .eval-divider {
+            display: none !important;
+        }
     }
 
     /* Risk Badges */
@@ -452,6 +625,18 @@ st.markdown(
         color: #cbd5e1;
         line-height: 1.6;
     }
+    @media (max-width: 768px) {
+        .rec-card-healthy, .rec-card-monitor, .rec-card-high {
+            padding: 14px 16px !important;
+            margin: 16px 0 !important;
+        }
+        .rec-headline {
+            font-size: 0.96rem !important;
+        }
+        .rec-body {
+            font-size: 0.88rem !important;
+        }
+    }
 
     /* Consistent Analytics Cards */
     .analytics-card-container {
@@ -461,6 +646,7 @@ st.markdown(
         padding: 22px 26px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
         margin-bottom: 16px;
+        box-sizing: border-box;
     }
     .panel-heading {
         font-size: 1.02rem;
@@ -482,8 +668,21 @@ st.markdown(
         line-height: 1.55;
         margin-top: 10px;
     }
+    @media (max-width: 768px) {
+        .analytics-card-container {
+            padding: 16px 14px !important;
+            border-radius: 14px !important;
+        }
+        .panel-heading {
+            font-size: 0.95rem !important;
+        }
+        .gauge-interpretation-box {
+            padding: 10px 14px !important;
+            font-size: 0.84rem !important;
+        }
+    }
 
-    /* Polished Workflow Pipeline Process Cards with Connected Arrows */
+    /* Workflow Pipeline Process Cards */
     .workflow-grid {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
@@ -540,6 +739,15 @@ st.markdown(
         justify-content: center;
         z-index: 5;
     }
+    @media (max-width: 900px) {
+        .workflow-grid {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+        }
+        .workflow-arrow-badge {
+            display: none !important;
+        }
+    }
 
     /* Spec details card */
     .spec-block {
@@ -576,12 +784,173 @@ st.markdown(
         padding: 20px 24px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         margin-bottom: 22px;
+        box-sizing: border-box;
+    }
+    @media (max-width: 768px) {
+        .urgent-engines-card {
+            padding: 14px 14px !important;
+            border-radius: 14px !important;
+        }
     }
 
     /* Table styling */
     .stDataFrame {
         border-radius: 14px;
         overflow: hidden;
+    }
+
+    /* Touch Targets - 44px Min Height for Mobile Accessibility */
+    button[kind="secondary"],
+    button[kind="primary"],
+    div.stButton > button,
+    div[data-testid="stDownloadButton"] > button {
+        background-color: #10192d !important;
+        color: #e8efff !important;
+        border: 1px solid #1e2d4a !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        min-height: 44px !important;
+        padding: 10px 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+    div.stButton > button:hover,
+    div[data-testid="stDownloadButton"] > button:hover {
+        background-color: #16233d !important;
+        border-color: #38bdf8 !important;
+        color: #38bdf8 !important;
+    }
+
+    /* Input Fields & Select Boxes */
+    div[data-baseweb="select"] > div,
+    div[data-baseweb="input"] > div,
+    div[data-baseweb="base-input"],
+    input, select, textarea {
+        background-color: #0d1527 !important;
+        color: #e8efff !important;
+        border-color: #1a2742 !important;
+        color-scheme: dark !important;
+        min-height: 44px !important;
+        box-sizing: border-box !important;
+    }
+    div[data-baseweb="popover"],
+    div[data-baseweb="menu"],
+    ul[role="listbox"],
+    li[role="option"] {
+        background-color: #0d1527 !important;
+        color: #e8efff !important;
+    }
+    li[role="option"]:hover,
+    li[role="option"][aria-selected="true"] {
+        background-color: #16233d !important;
+        color: #38bdf8 !important;
+    }
+    div[data-testid="stNumberInput"] button {
+        background-color: #10192d !important;
+        color: #e8efff !important;
+        border-color: #1e2d4a !important;
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+
+    /* Radio Controls, Checkboxes, and Toggles */
+    div[data-testid="stRadio"] label,
+    div[data-testid="stCheckbox"] label,
+    div[data-testid="stToggle"] label {
+        color: #e8efff !important;
+        min-height: 44px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        cursor: pointer !important;
+    }
+    div[data-testid="stRadio"] > div,
+    div[data-testid="stToggle"] > div,
+    div[data-testid="stCheckbox"] > div {
+        color-scheme: dark !important;
+    }
+
+    /* Expanders */
+    div[data-testid="stExpander"] {
+        background-color: #0d1527 !important;
+        border: 1px solid #1a2742 !important;
+        border-radius: 14px !important;
+        color-scheme: dark !important;
+    }
+    div[data-testid="stExpander"] summary {
+        color: #e8efff !important;
+        background-color: #0d1527 !important;
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    div[data-testid="stExpander"] summary:hover {
+        color: #38bdf8 !important;
+    }
+    div[data-testid="stExpander"] div[data-testid="stExpanderDetails"] {
+        background-color: #0d1527 !important;
+        color: #cbd5e1 !important;
+    }
+
+    /* Tabs Horizontal Scroll on Small Screens */
+    div[data-testid="stTabs"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: thin !important;
+        scrollbar-color: #1e2d4a transparent !important;
+        padding-bottom: 6px !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab"] {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        padding: 10px 16px !important;
+        font-size: 0.95rem !important;
+        min-height: 44px !important;
+        color: #94a3b8 !important;
+        background-color: transparent !important;
+        font-weight: 600 !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: #38bdf8 !important;
+        border-bottom-color: #38bdf8 !important;
+    }
+    div[data-testid="stTabs"] {
+        color-scheme: dark !important;
+    }
+
+    /* File Uploader */
+    div[data-testid="stFileUploader"] section {
+        background-color: #0d1527 !important;
+        border-color: #1a2742 !important;
+        color: #e8efff !important;
+    }
+
+    /* Responsive Column Collapse on Mobile */
+    @media (max-width: 768px) {
+        div[data-testid="stHorizontalBlock"]:has([data-testid="stPlotlyChart"]),
+        div[data-testid="stHorizontalBlock"]:has(.spec-block),
+        div[data-testid="stHorizontalBlock"]:has([data-testid="stRadio"]) {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 14px !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has([data-testid="stPlotlyChart"]) > div[data-testid="column"],
+        div[data-testid="stHorizontalBlock"]:has(.spec-block) > div[data-testid="column"],
+        div[data-testid="stHorizontalBlock"]:has([data-testid="stRadio"]) > div[data-testid="column"] {
+            width: 100% !important;
+            min-width: 100% !important;
+        }
     }
     </style>
     """,
@@ -590,11 +959,17 @@ st.markdown(
 
 
 # ==========================================
-# 2. Helper Functions & Cached Model Loaders
+# 2. Optimized Caching & Data Loading Layer
 # ==========================================
+
+# Cache 1: Model & Scaler Artifacts (Loaded once per server process using @st.cache_resource)
 @st.cache_resource(show_spinner=False)
 def load_system_artifacts():
-    """Loads saved LSTM model, fitted scaler, and metadata JSON."""
+    """
+    Loads and caches the trained Deep LSTM neural network model, fitted MinMaxScaler,
+    and metadata JSON. Loaded once per server session with @st.cache_resource
+    to avoid re-importing weights or allocating GPU/CPU memory on every UI rerun.
+    """
     model, scaler, metadata = None, None, None
     if os.path.exists(config.MODEL_FILE):
         try:
@@ -617,19 +992,75 @@ def load_system_artifacts():
     return model, scaler, metadata
 
 
+# Cache 2: Static NASA C-MAPSS FD001 Telemetry Dataset (Disk read & parsing cached with @st.cache_data)
 @st.cache_data(show_spinner=False)
 def load_default_test_data() -> pd.DataFrame:
-    """Loads default C-MAPSS FD001 test dataset."""
+    """
+    Loads and caches the NASA C-MAPSS FD001 benchmark test telemetry dataset.
+    Uses @st.cache_data to prevent disk reads and space-separated text parsing
+    on every user interaction.
+    """
     preprocess.ensure_dataset_available()
     return preprocess.load_cmapss_file(config.TEST_DATA_FILE)
 
 
+# Cache 3: Custom Uploaded Telemetry Parser (Raw bytes to parsed DataFrame cached with @st.cache_data)
+@st.cache_data(show_spinner=False)
+def parse_uploaded_telemetry(file_bytes: bytes) -> pd.DataFrame:
+    """
+    Parses and caches custom uploaded telemetry files from raw bytes.
+    Avoids re-parsing text streams on widget changes.
+    """
+    df = pd.read_csv(BytesIO(file_bytes), sep=r"\s+", header=None).dropna(axis=1, how="all")
+    cols = config.ALL_COLUMNS[: df.shape[1]]
+    df.columns = cols
+    df["engine_id"] = df["engine_id"].astype(int)
+    df["cycle"] = df["cycle"].astype(int)
+    return df
+
+
+# Cache 4: Fleet Predictions (Inference over all 100 engines cached with @st.cache_data)
+@st.cache_data(show_spinner=False)
+def get_cached_fleet_predictions(
+    test_df: pd.DataFrame,
+    _model: Any,
+    _scaler: Any,
+    _metadata: Optional[Dict[str, Any]],
+) -> pd.DataFrame:
+    """
+    Computes and caches Remaining Useful Life (RUL) inference for all fleet units.
+    Uses @st.cache_data with ignored model/scaler hashing (_model, _scaler) to avoid
+    re-running 100-engine neural network inference on every UI widget interaction.
+    """
+    return predict_module.predict_fleet_rul(
+        test_df=test_df,
+        model=_model,
+        scaler=_scaler,
+        metadata=_metadata,
+    )
+
+
+# Cache 5: Friendly Sensor Label Formatter (Cached with @st.cache_data)
+@st.cache_data(show_spinner=False)
 def format_sensor_label(s_col: str) -> str:
-    """Generates friendly aeronautical engineering label with raw column in brackets."""
+    """Generates friendly aeronautical engineering label with raw column in brackets (cached)."""
     meta = config.SENSOR_METADATA.get(s_col, {})
     if meta and "name" in meta:
         return f"{meta['name']} [{s_col}]"
     return s_col
+
+
+# Cache 6: Precomputed Sensor Channel Mapping Dictionary (Cached with @st.cache_data)
+@st.cache_data(show_spinner=False)
+def get_cached_sensor_label_map(sensor_cols: Tuple[str, ...]) -> Dict[str, str]:
+    """
+    Precomputes and caches dictionary mapping friendly sensor labels to raw column names.
+    Cached with @st.cache_data to avoid dictionary reconstruction on every render.
+    """
+    label_map = {}
+    for s_col in sensor_cols:
+        label_map[format_sensor_label(s_col)] = s_col
+    return label_map
 
 
 def build_compact_rul_gauge(predicted_rul: float) -> go.Figure:
@@ -674,7 +1105,8 @@ def build_compact_rul_gauge(predicted_rul: float) -> go.Figure:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font={"color": "#f8fafc"},
-        height=250,
+        autosize=True,
+        height=240,
         margin=dict(l=10, r=10, t=20, b=10),
     )
     return fig
@@ -742,6 +1174,7 @@ def plot_sensor_telemetry_clean(
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="#080d18",
+        autosize=True,
         xaxis=dict(
             title=dict(text="Flight Cycle (Operating Missions)", font=dict(size=12, color="#94a3b8")),
             gridcolor="#152136",
@@ -759,13 +1192,13 @@ def plot_sensor_telemetry_clean(
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=-0.28,
+            y=-0.32,
             xanchor="center",
             x=0.5,
             font=dict(size=11, color="#cbd5e1"),
         ),
-        height=430,
-        margin=dict(l=50, r=20, t=20, b=75),
+        height=400,
+        margin=dict(l=40, r=15, t=20, b=75),
     )
     return fig
 
@@ -774,8 +1207,14 @@ def plot_sensor_telemetry_clean(
 # 3. Main Command Center Application
 # ==========================================
 def main():
-    # Load Model Artifacts
-    model, scaler, metadata = load_system_artifacts()
+    # Load Model Artifacts with a small loading spinner only on first load
+    if "model_loaded_once" not in st.session_state:
+        with st.spinner("Initializing TurboLife AI Deep LSTM Model & Artifacts..."):
+            model, scaler, metadata = load_system_artifacts()
+        st.session_state["model_loaded_once"] = True
+    else:
+        model, scaler, metadata = load_system_artifacts()
+
     model_ready = model is not None and scaler is not None and metadata is not None
 
     # Initialize Session State Defaults
@@ -816,15 +1255,16 @@ def main():
                 <circle cx="170" cy="24" r="2" fill="#ffffff"/>
             </svg>
             <div class="header-content-left">
-                <div class="header-icon-badge">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-                    </svg>
+                <div class="header-brand-row">
+                    <div class="header-icon-badge">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                        </svg>
+                    </div>
+                    <span class="header-main-title">TurboLife AI</span>
                 </div>
                 <div class="header-text-container">
                     <div class="header-title-row">
-                        <span class="header-main-title">TurboLife AI</span>
-                        <span class="header-divider">|</span>
                         <span class="header-subtitle">Predictive Maintenance Command Center</span>
                     </div>
                     <div class="header-desc-line">LSTM-based remaining useful life prediction for turbofan engines</div>
@@ -923,13 +1363,8 @@ def main():
                 uploaded_file = st.file_uploader("Upload Telemetry File", type=["txt", "csv"])
                 if uploaded_file is not None:
                     try:
-                        df = pd.read_csv(uploaded_file, sep=r"\s+", header=None).dropna(axis=1, how="all")
-                        cols = config.ALL_COLUMNS[: df.shape[1]]
-                        df.columns = cols
-                        df["engine_id"] = df["engine_id"].astype(int)
-                        df["cycle"] = df["cycle"].astype(int)
-                        test_df = df
-                        st.success(f"Loaded {df['engine_id'].nunique()} custom engines.")
+                        test_df = parse_uploaded_telemetry(uploaded_file.getvalue())
+                        st.success(f"Loaded {test_df['engine_id'].nunique()} custom engines.")
                     except Exception as e:
                         st.error(f"Failed to parse uploaded file: {e}")
             else:
@@ -996,13 +1431,13 @@ def main():
         st.info("Please select or upload a valid telemetry dataset in the sidebar.")
         return
 
-    # Execute Fleet Predictions
+    # Execute Cached Fleet Predictions (computed once per dataset, not on every widget interaction)
     try:
-        fleet_results = predict_module.predict_fleet_rul(
+        fleet_results = get_cached_fleet_predictions(
             test_df=test_df,
-            model=model,
-            scaler=scaler,
-            metadata=metadata,
+            _model=model,
+            _scaler=scaler,
+            _metadata=metadata,
         )
     except Exception as e:
         st.error(f"Inference computation error: {e}")
@@ -1255,7 +1690,7 @@ def main():
             st.plotly_chart(
                 build_compact_rul_gauge(pred_rul),
                 width="stretch",
-                config={"displayModeBar": False},
+                config={"displayModeBar": False, "responsive": True},
                 key="diag_rul_gauge",
             )
             st.markdown(
@@ -1270,13 +1705,13 @@ def main():
         st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
 
         # ROW 2: Dedicated Full-Width Historical Telemetry Card
-        active_sensors = metadata.get("feature_columns", [c for c in test_df.columns if c.startswith("sensor_")])
-        sensor_label_map = {format_sensor_label(s): s for s in active_sensors}
+        active_sensors = tuple(metadata.get("feature_columns", [c for c in test_df.columns if c.startswith("sensor_")]))
+        sensor_label_map = get_cached_sensor_label_map(active_sensors)
         friendly_options = list(sensor_label_map.keys())
 
         preferred_defaults_raw = [s for s in ["sensor_3", "sensor_4", "sensor_7"] if s in active_sensors]
         if len(preferred_defaults_raw) < 3:
-            preferred_defaults_raw = active_sensors[:3]
+            preferred_defaults_raw = list(active_sensors[:3])
         preferred_defaults_friendly = [format_sensor_label(s) for s in preferred_defaults_raw]
 
         st.markdown(
@@ -1323,7 +1758,7 @@ def main():
                     normalized_mode=is_normalized,
                 ),
                 width="stretch",
-                config={"displayModeBar": False},
+                config={"displayModeBar": False, "responsive": True},
                 key="diag_sensor_telemetry",
             )
         else:
@@ -1367,11 +1802,12 @@ def main():
             fig_donut.update_layout(
                 template="plotly_dark",
                 paper_bgcolor="rgba(0,0,0,0)",
-                height=320,
+                autosize=True,
+                height=300,
                 margin=dict(l=15, r=15, t=35, b=15),
-                legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5, font=dict(size=11)),
+                legend=dict(orientation="h", yanchor="bottom", y=-0.22, xanchor="center", x=0.5, font=dict(size=10.5)),
             )
-            st.plotly_chart(fig_donut, width="stretch", config={"displayModeBar": False}, key="donut_fleet_risk")
+            st.plotly_chart(fig_donut, width="stretch", config={"displayModeBar": False, "responsive": True}, key="donut_fleet_risk")
 
         with fc2:
             # Sorted Bar Chart
@@ -1395,11 +1831,12 @@ def main():
                 template="plotly_dark",
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="#080d18",
-                height=320,
+                autosize=True,
+                height=310,
                 margin=dict(l=35, r=15, t=35, b=35),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=11)),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10.5)),
             )
-            st.plotly_chart(fig_bar, width="stretch", config={"displayModeBar": False}, key="bar_fleet_rul")
+            st.plotly_chart(fig_bar, width="stretch", config={"displayModeBar": False, "responsive": True}, key="bar_fleet_rul")
 
         st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
 
