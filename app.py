@@ -46,17 +46,100 @@ st.markdown(
         box-sizing: border-box !important;
     }
 
-    /* Clean Chrome: Hide deploy button, hamburger menu and footer only */
+    /* Preserve mobile sidebar access */
+    /* Clean Chrome: Hide deploy button, hamburger menu, toolbar, and footer */
     .stDeployButton,
     .stAppDeployButton,
-    [data-testid="stAppDeployButton"] {
-        display: none !important;
-    }
-    #MainMenu {
-        visibility: hidden !important;
-    }
+    [data-testid="stAppDeployButton"],
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    #MainMenu,
     footer {
+        display: none !important;
         visibility: hidden !important;
+        height: 0 !important;
+        width: 0 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    /* Keep Streamlit header transparent & zero-height so collapsed sidebar control button remains accessible */
+    header[data-testid="stHeader"],
+    [data-testid="stHeader"] {
+        background: transparent !important;
+        color-scheme: dark !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        overflow: visible !important;
+        pointer-events: none !important;
+        z-index: 99999 !important;
+    }
+
+    /* Fixed, visible, accessible Sidebar Collapsed Control Button */
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        position: fixed !important;
+        top: 12px !important;
+        left: 12px !important;
+        z-index: 1000000 !important;
+        width: 38px !important;
+        height: 38px !important;
+        background: #0d1527 !important;
+        border: 1px solid #38bdf8 !important;
+        border-radius: 10px !important;
+        color: #38bdf8 !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 10px rgba(56, 189, 248, 0.25) !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+    }
+
+    [data-testid="stSidebarCollapsedControl"] button,
+    [data-testid="collapsedControl"] button {
+        color: #38bdf8 !important;
+        background: transparent !important;
+        border: none !important;
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        padding: 0 !important;
+    }
+
+    [data-testid="stSidebarCollapsedControl"] svg,
+    [data-testid="collapsedControl"] svg {
+        fill: #38bdf8 !important;
+        color: #38bdf8 !important;
+        stroke: #38bdf8 !important;
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    [data-testid="stSidebarCollapsedControl"]:hover,
+    [data-testid="collapsedControl"]:hover {
+        background: #16233d !important;
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.45) !important;
+    }
+
+    /* Suppress Plotly double-click notification overlay and modebar */
+    .plotly-notifier,
+    .modebar,
+    .modebar-container,
+    .js-plotly-plot .plotly .modebar,
+    .js-plotly-plot .plotly .notifier-note {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
     }
 
     /* Force Dark Color Rendering Globally Across Browser & System Modes */
@@ -70,20 +153,7 @@ st.markdown(
         overflow-x: hidden !important;
     }
 
-    /* Remove unused Streamlit toolbar space */
-    [data-testid="stHeader"],
-    header[data-testid="stHeader"],
-    [data-testid="stToolbar"] {
-        display: none !important;
-        height: 0 !important;
-        min-height: 0 !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border: none !important;
-        background: transparent !important;
-    }
-
-    /* Keep Sidebar visible, styled, and responsive */
+    /* Keep Sidebar styled and responsive */
     section[data-testid="stSidebar"] {
         background-color: #090e1a !important;
         border-right: 1px solid #182338 !important;
@@ -97,9 +167,6 @@ st.markdown(
     [data-testid="stSidebarCollapseButton"] button {
         color: #38bdf8 !important;
     }
-    [data-testid="stSidebarCollapsedControl"] {
-        color: #38bdf8 !important;
-    }
 
     /* Global Typography & Word Wrapping */
     .stApp {
@@ -110,7 +177,7 @@ st.markdown(
         word-break: break-word !important;
     }
 
-    /* Desktop Main Container */
+    /* Desktop Main Container & Sidebar behavior */
     @media (min-width: 769px) {
         [data-testid="stAppViewContainer"] > .main {
             padding-top: 16px !important;
@@ -121,6 +188,14 @@ st.markdown(
             padding-left: 2.4rem !important;
             padding-right: 2.4rem !important;
             max-width: 1480px;
+        }
+        section[data-testid="stSidebar"][aria-expanded="false"] {
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            margin-left: 0 !important;
+            transform: translateX(-100%) !important;
+            overflow: hidden !important;
         }
         .header-bar {
             padding: 48px 32px 24px 32px !important;
@@ -179,42 +254,48 @@ st.markdown(
             left: 0 !important;
             height: 100vh !important;
             z-index: 999999 !important;
-            box-shadow: 6px 0 28px rgba(0, 0, 0, 0.75) !important;
+            box-shadow: 6px 0 28px rgba(0, 0, 0, 0.85) !important;
             transition: transform 0.3s ease, width 0.3s ease !important;
+            background: #090e1c !important;
         }
         section[data-testid="stSidebar"][aria-expanded="true"] {
             width: 85vw !important;
             min-width: 85vw !important;
             max-width: 85vw !important;
+            transform: translateX(0) !important;
+            display: block !important;
         }
         section[data-testid="stSidebar"][aria-expanded="false"] {
             width: 0 !important;
             min-width: 0 !important;
             max-width: 0 !important;
             margin-left: 0 !important;
+            transform: translateX(-100%) !important;
+            overflow: hidden !important;
         }
 
-        /* Floating Sidebar Toggle Button */
-        [data-testid="stSidebarCollapsedControl"] {
-            position: fixed !important;
-            top: 12px !important;
-            left: 12px !important;
-            z-index: 1000000 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            width: 40px !important;
-            height: 40px !important;
-            background: #0d1527 !important;
-            border: 1px solid #1e2d4a !important;
-            border-radius: 10px !important;
-            color: #38bdf8 !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
-        }
-        [data-testid="stSidebarCollapsedControl"] button {
-            color: #38bdf8 !important;
+        /* Mobile Section Headings */
+        h1, h2, h3, .tab-main-heading, .header-main-title {
+            font-size: clamp(1.25rem, 5vw, 1.5rem) !important; /* 20px - 24px */
+            line-height: 1.25 !important;
+            overflow-wrap: anywhere !important;
+            word-break: break-word !important;
             width: 100% !important;
-            height: 100% !important;
+            max-width: 100% !important;
+        }
+        .panel-heading, .engine-title, .spec-block-title, h4, h5 {
+            font-size: clamp(1.02rem, 4vw, 1.18rem) !important;
+            line-height: 1.25 !important;
+            overflow-wrap: anywhere !important;
+            word-break: break-word !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .tab-sub-heading {
+            font-size: 0.84rem !important;
+            line-height: 1.4 !important;
+            width: 100% !important;
+            overflow-wrap: anywhere !important;
         }
 
         /* Mobile Stacked Hero Header */
@@ -247,10 +328,6 @@ st.markdown(
             height: 40px !important;
             min-width: 40px !important;
         }
-        .header-main-title {
-            font-size: 1.35rem !important;
-            overflow-wrap: anywhere !important;
-        }
         .header-text-container {
             width: 100% !important;
             min-width: 0 !important;
@@ -282,19 +359,10 @@ st.markdown(
             padding: 8px 12px !important;
         }
 
-        /* Mobile Headings & Panels */
-        .tab-main-heading {
-            font-size: 1.2rem !important;
-        }
-        .tab-sub-heading {
-            font-size: 0.84rem !important;
-        }
+        /* Mobile Panels & Cards */
         .analytics-card-container {
             padding: 16px 14px !important;
             border-radius: 14px !important;
-        }
-        .panel-heading {
-            font-size: 0.95rem !important;
         }
         .gauge-interpretation-box {
             padding: 10px 14px !important;
@@ -342,6 +410,52 @@ st.markdown(
             min-width: 100% !important;
         }
 
+        /* Telemetry Radio Controls - stack vertically on mobile with full wrap */
+        div[data-testid="stRadio"] > div[role="radiogroup"] {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 8px !important;
+            width: 100% !important;
+        }
+        div[data-testid="stRadio"] label {
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            word-break: break-word !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        /* Telemetry Multiselect Channel Selector - 100% width with truncated tags */
+        div[data-testid="stMultiSelect"] {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        div[data-testid="stMultiSelect"] [data-baseweb="select"] {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        div[data-testid="stMultiSelect"] [data-baseweb="tag"] {
+            max-width: calc(100% - 8px) !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
+        }
+        div[data-testid="stMultiSelect"] [data-baseweb="tag"] span[title] {
+            max-width: 180px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            display: inline-block !important;
+        }
+        div[data-testid="stMultiSelect"] [data-baseweb="tag"] [role="presentation"] {
+            flex-shrink: 0 !important;
+            margin-left: 4px !important;
+        }
+
         /* Single column for Engine Diagnostic Metric Units */
         div[data-testid="stHorizontalBlock"]:has(.engine-metric-unit) {
             display: grid !important;
@@ -353,6 +467,32 @@ st.markdown(
             width: 100% !important;
             min-width: 0 !important;
             flex: 1 1 auto !important;
+        }
+
+        /* Mobile Data Tables - Internal Horizontal Scroll and compact typography */
+        [data-testid="stDataFrame"],
+        .stDataFrame {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        [data-testid="stDataFrame"] table,
+        .stDataFrame table {
+            font-size: 0.82rem !important;
+        }
+        [data-testid="stDataFrame"] th,
+        .stDataFrame th {
+            font-size: 0.84rem !important;
+            padding: 6px 8px !important;
+            white-space: nowrap !important;
+            font-weight: 700 !important;
+        }
+        [data-testid="stDataFrame"] td,
+        .stDataFrame td {
+            font-size: 0.82rem !important;
+            padding: 6px 8px !important;
+            white-space: nowrap !important;
         }
     }
 
@@ -1215,6 +1355,7 @@ def plot_sensor_telemetry_clean(
 ) -> go.Figure:
     """
     Renders clean Plotly time-series degradation trends across the full container width.
+    /* Prevent mobile chart label overlap */
     """
     fig = go.Figure()
     
@@ -1223,7 +1364,23 @@ def plot_sensor_telemetry_clean(
     for idx, s_col in enumerate(sensor_cols[:3]):
         meta = config.SENSOR_METADATA.get(s_col, {"name": s_col, "unit": ""})
         unit_str = f" [{meta['unit']}]" if meta["unit"] and meta["unit"] != "-" else ""
-        friendly_label = f"{meta['name']} [{s_col}]"
+        
+        # Concise aeronautical legend label to prevent mobile line-wrapping collision
+        # e.g., HPC Outlet Temp (T30), LPT Outlet Temp (T50), HPC Outlet Pressure (P30)
+        sensor_name = meta.get("name", s_col)
+        short_name = (
+            sensor_name.replace("Temperature", "Temp")
+            .replace("Static Pressure", "Static Press")
+            .replace("Physical Core Speed", "Physical Core Spd")
+            .replace("Physical Fan Speed", "Physical Fan Spd")
+            .replace("Corrected Core Speed", "Corrected Core Spd")
+            .replace("Corrected Fan Speed", "Corrected Fan Spd")
+            .replace("Demanded Corrected Fan Speed", "Demanded Fan Spd")
+            .replace("Demanded Fan Speed", "Demanded Fan Spd")
+            .replace("Ratio of Fuel Flow to Ps30", "Fuel Flow/Ps30")
+        )
+        legend_label = f"{short_name}"
+        full_label = f"{sensor_name} [{s_col}]"
         
         raw_values = engine_df[s_col].values
         
@@ -1244,11 +1401,11 @@ def plot_sensor_telemetry_clean(
                 x=engine_df["cycle"],
                 y=y_plot,
                 mode="lines+markers",
-                name=friendly_label,
+                name=legend_label,
                 line=dict(width=2.4, color=color_palette[idx % len(color_palette)]),
-                marker=dict(size=3.5),
+                marker=dict(size=4),
                 customdata=y_hover,
-                hovertemplate="Cycle %{x}<br>" + friendly_label + ": %{customdata}<extra></extra>",
+                hovertemplate="Cycle %{x}<br>" + full_label + ": %{customdata}<extra></extra>",
             )
         )
 
@@ -1263,7 +1420,7 @@ def plot_sensor_telemetry_clean(
         annotation_font=dict(size=11, color="#38bdf8"),
     )
 
-    y_axis_title = "Normalized Trend (0.0 to 1.0 Range)" if normalized_mode else "Raw Sensor Engineering Units"
+    y_axis_title = "Normalized Trend (0.0 to 1.0)" if normalized_mode else "Raw Sensor Engineering Units"
 
     fig.update_layout(
         template="plotly_dark",
@@ -1286,14 +1443,15 @@ def plot_sensor_telemetry_clean(
         ),
         legend=dict(
             orientation="h",
-            yanchor="bottom",
-            y=-0.32,
+            yanchor="top",
+            y=-0.22,
             xanchor="center",
             x=0.5,
             font=dict(size=11, color="#cbd5e1"),
+            itemwidth=30,
         ),
-        height=380,
-        margin=dict(l=35, r=15, t=20, b=75),
+        height=520,
+        margin=dict(l=50, r=15, t=40, b=150),
     )
     return fig
 
@@ -1785,7 +1943,7 @@ def main():
             st.plotly_chart(
                 build_compact_rul_gauge(pred_rul),
                 use_container_width=True,
-                config={"displayModeBar": False, "responsive": True},
+                config={"displayModeBar": False, "scrollZoom": False, "responsive": True},
                 key="diag_rul_gauge",
             )
             st.markdown(
@@ -1853,7 +2011,7 @@ def main():
                     normalized_mode=is_normalized,
                 ),
                 use_container_width=True,
-                config={"displayModeBar": False, "responsive": True},
+                config={"displayModeBar": False, "scrollZoom": False, "responsive": True},
                 key="diag_sensor_telemetry",
             )
         else:
@@ -1898,11 +2056,11 @@ def main():
                 template="plotly_dark",
                 paper_bgcolor="rgba(0,0,0,0)",
                 autosize=True,
-                height=290,
+                height=300,
                 margin=dict(l=15, r=15, t=35, b=15),
                 legend=dict(orientation="h", yanchor="bottom", y=-0.22, xanchor="center", x=0.5, font=dict(size=10.5)),
             )
-            st.plotly_chart(fig_donut, use_container_width=True, config={"displayModeBar": False, "responsive": True}, key="donut_fleet_risk")
+            st.plotly_chart(fig_donut, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False, "responsive": True}, key="donut_fleet_risk")
 
         with fc2:
             # Sorted Bar Chart
@@ -1918,7 +2076,7 @@ def main():
                     config.RISK_HEALTHY: config.RISK_COLORS[config.RISK_HEALTHY],
                 },
                 title="Fleet RUL Ranking (All 100 Engines)",
-                labels={"engine_id": "Engine ID", "predicted_rul": "Predicted RUL (Cycles)", "risk_level": "Risk Tier"},
+                labels={"engine_id": "Engine ID", "predicted_rul": "Predicted RUL (Cycles)", "risk_level": ""},
             )
             fig_bar.add_hline(y=config.MONITOR_THRESHOLD, line_dash="dash", line_color="#ef4444", annotation_text="High Risk (30)", annotation_font_size=10)
             fig_bar.add_hline(y=config.HEALTHY_THRESHOLD, line_dash="dash", line_color="#10b981", annotation_text="Healthy (80)", annotation_font_size=10)
@@ -1927,11 +2085,39 @@ def main():
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="#080d18",
                 autosize=True,
-                height=300,
-                margin=dict(l=35, r=15, t=35, b=35),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10.5)),
+                height=360,
+                title=dict(
+                    text="Fleet RUL Ranking (All 100 Engines)",
+                    x=0.02,
+                    xanchor="left",
+                    y=0.96,
+                    yanchor="top",
+                    font=dict(size=18, color="#f8fafc"),
+                ),
+                margin=dict(l=45, r=15, t=115, b=70),
+                legend=dict(
+                    orientation="h",
+                    title_text="",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="left",
+                    x=0.02,
+                    font=dict(size=11, color="#cbd5e1"),
+                ),
+                xaxis=dict(
+                    title=dict(text="Engine ID (Ranked)", font=dict(size=11, color="#94a3b8")),
+                    gridcolor="#152136",
+                    showgrid=False,
+                    tickfont=dict(size=10, color="#cbd5e1"),
+                ),
+                yaxis=dict(
+                    title=dict(text="Predicted RUL (Cycles)", font=dict(size=11, color="#94a3b8")),
+                    gridcolor="#152136",
+                    showgrid=True,
+                    tickfont=dict(size=10, color="#cbd5e1"),
+                ),
             )
-            st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar": False, "responsive": True}, key="bar_fleet_rul")
+            st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False, "responsive": True}, key="bar_fleet_rul")
 
         st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
 
