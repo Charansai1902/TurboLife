@@ -3,7 +3,6 @@ Streamlit Web Dashboard for TurboLife AI.
 Refined Turbofan Engine RUL Command Center & Predictive Maintenance Platform.
 Optimized with Streamlit @st.cache_resource and @st.cache_data for instant sub-second re-renders,
 zero redundant model reloads, and persistent fleet-level inference caching.
-Fully responsive across mobile (375px, 390px, 414px), tablet (600px-900px), and desktop displays.
 """
 
 import os
@@ -26,7 +25,7 @@ import model as model_module
 import predict as predict_module
 
 # ==========================================
-# 1. Streamlit Page Configuration
+# 1. Streamlit Page Configuration & Premium Aviation Theme
 # ==========================================
 st.set_page_config(
     page_title="TurboLife AI – Turbofan Engine RUL Command Center",
@@ -35,59 +34,43 @@ st.set_page_config(
     initial_sidebar_state="auto",
 )
 
-# Custom High-End Aviation CSS Theme with TurboLife mobile responsive layout
+# Custom High-End Aviation CSS Theme
 st.markdown(
     """
     <style>
-    /* ========================================================= */
-    /* 1. GLOBAL BASE STYLES & CLEAN CHROME                      */
-    /* ========================================================= */
-    *, *::before, *::after {
-        box-sizing: border-box !important;
-    }
-
-    /* Clean Chrome: Hide deploy button, hamburger menu, toolbar, and footer */
+    /* Clean Chrome: Hide deploy button, hamburger menu and footer only */
     .stDeployButton,
     .stAppDeployButton,
-    [data-testid="stAppDeployButton"],
-    [data-testid="stToolbar"],
-    [data-testid="stDecoration"],
-    #MainMenu,
-    footer {
+    [data-testid="stAppDeployButton"] {
         display: none !important;
+    }
+    #MainMenu {
         visibility: hidden !important;
-        height: 0 !important;
-        width: 0 !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
+    }
+    footer {
+        visibility: hidden !important;
     }
 
-    /* Force Dark Color Scheme Globally */
+    /* Force Dark Color Rendering Globally Across Browser & System Modes */
     html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"],
+    [data-testid="stHeader"], [data-testid="stToolbar"],
     [data-testid="stMain"], .stApp {
         background: #060a14 !important;
         color: #e8efff !important;
         color-scheme: dark !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
     }
 
-    /* Global Typography */
-    .stApp {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* Fix Streamlit Top Header/Toolbar: Never White */
+    header[data-testid="stHeader"],
+    [data-testid="stHeader"],
+    [data-testid="stToolbar"] {
+        background-color: #060a14 !important;
+        border-bottom: 1px solid #16233d !important;
     }
 
-    /* Suppress Plotly double-click notification overlay and modebar */
-    .plotly-notifier,
-    .modebar,
-    .modebar-container,
-    .js-plotly-plot .plotly .modebar,
-    .js-plotly-plot .plotly .notifier-note {
-        display: none !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-    }
-
-    /* Sidebar Styling */
+    /* Keep Sidebar visible, styled, and responsive */
     section[data-testid="stSidebar"] {
         background-color: #090e1a !important;
         border-right: 1px solid #182338 !important;
@@ -96,9 +79,41 @@ st.markdown(
     section[data-testid="stSidebar"] * {
         color-scheme: dark !important;
     }
+
+    /* Ensure Collapse / Expand toggle buttons are styled in cyan and visible */
     [data-testid="stSidebarCollapseButton"] button {
         color: #38bdf8 !important;
     }
+    [data-testid="stSidebarCollapsedControl"] {
+        color: #38bdf8 !important;
+    }
+
+    /* Global Typography */
+    .stApp {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* Responsive Main Content Container */
+    @media (min-width: 769px) {
+        .block-container {
+            padding-top: 1.6rem !important;
+            padding-bottom: 3rem !important;
+            padding-left: 2.4rem !important;
+            padding-right: 2.4rem !important;
+            max-width: 1480px;
+        }
+    }
+    @media (max-width: 768px) {
+        .block-container {
+            padding-top: 1rem !important;
+            padding-bottom: 2.2rem !important;
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+            max-width: 100% !important;
+        }
+    }
+
+    /* Sidebar Content Spacing & Grouped Panels */
     [data-testid="stSidebar"] .block-container {
         padding-top: 1.4rem !important;
         padding-bottom: 2rem !important;
@@ -132,61 +147,21 @@ st.markdown(
         line-height: 1.45;
     }
 
-    /* ========================================================= */
-    /* 2. DESKTOP LAYOUT (> 768px)                               */
-    /* ========================================================= */
-    @media screen and (min-width: 769px) {
-        /* Main Container & Top Spacing */
-        [data-testid="stAppViewContainer"] > .main {
-            padding-top: 16px !important;
-        }
-        .block-container {
-            padding-top: 16px !important;
-            padding-bottom: 3rem !important;
-            padding-left: 2.4rem !important;
-            padding-right: 2.4rem !important;
-            max-width: 1480px;
-        }
-
-        /* Desktop Header Layout */
-        .header-bar {
-            padding: 48px 32px 24px 32px !important;
-            min-height: 140px !important;
-            margin-bottom: 24px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-        }
-        .header-content-left {
-            display: flex !important;
-            align-items: center !important;
-            gap: 18px !important;
-        }
-        .header-brand-row {
-            display: flex !important;
-            align-items: center !important;
-            gap: 14px !important;
-        }
-        .header-subtitle::before {
-            content: "|";
-            color: #475569;
-            font-weight: 300;
-            margin-right: 12px;
-            margin-left: 2px;
-        }
-    }
-
-    /* Prevent header glow from being clipped */
+    /* Header Card - Curved Flight Path & Responsive Stacking */
     .header-bar {
         position: relative;
         background: radial-gradient(ellipse at 18% 30%, rgba(56, 189, 248, 0.09) 0%, transparent 60%), linear-gradient(135deg, #101a2e 0%, #0c1322 100%);
         border: 1px solid rgba(56, 189, 248, 0.22);
         border-radius: 16px;
-        margin-top: 0;
+        padding: 48px 32px 24px 32px;
         margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.32);
         box-sizing: border-box;
         overflow: hidden;
+        min-height: 140px;
         width: 100%;
     }
     .header-flight-path {
@@ -197,7 +172,18 @@ st.markdown(
         height: 100%;
         pointer-events: none;
         z-index: 1;
-        overflow: visible;
+    }
+    .header-content-left {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+    .header-brand-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
     }
     .header-icon-badge {
         width: 48px;
@@ -223,7 +209,7 @@ st.markdown(
         gap: 6px;
     }
     .header-main-title {
-        font-size: 1.75rem;
+        font-size: 1.75rem; /* ~28px */
         font-weight: 800;
         color: #38bdf8;
         letter-spacing: -0.3px;
@@ -274,22 +260,83 @@ st.markdown(
         flex-shrink: 0;
     }
 
+    /* Desktop Subtitle Divider */
+    @media (min-width: 769px) {
+        .header-subtitle::before {
+            content: "|";
+            color: #475569;
+            font-weight: 300;
+            margin-right: 12px;
+            margin-left: 2px;
+        }
+    }
+
+    /* Mobile Header Stacking */
+    @media (max-width: 768px) {
+        .header-bar {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            padding: 20px 16px 18px 16px !important;
+            min-height: auto !important;
+            gap: 14px !important;
+        }
+        .header-content-left {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 10px !important;
+            width: 100% !important;
+        }
+        .header-brand-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            width: 100% !important;
+        }
+        .header-main-title {
+            font-size: 1.5rem !important;
+        }
+        .header-subtitle {
+            font-size: 1rem !important;
+        }
+        .header-desc-line {
+            font-size: 0.84rem !important;
+        }
+        .header-status-slot {
+            width: 100% !important;
+            display: flex !important;
+            justify-content: flex-start !important;
+        }
+        .status-pill-online, .status-pill-offline {
+            width: 100% !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+    }
+
     /* Tab Page Headers */
     .tab-header-box {
         margin-bottom: 20px;
         padding-top: 6px;
     }
     .tab-main-heading {
-        font-size: 1.45rem;
+        font-size: 1.45rem; /* ~23px */
         font-weight: 800;
         color: #f8fafc;
         letter-spacing: -0.3px;
         margin-bottom: 4px;
     }
     .tab-sub-heading {
-        font-size: 0.95rem;
+        font-size: 0.95rem; /* ~15px */
         color: #94a3b8;
         line-height: 1.45;
+    }
+    @media (max-width: 768px) {
+        .tab-main-heading {
+            font-size: 1.25rem !important;
+        }
+        .tab-sub-heading {
+            font-size: 0.86rem !important;
+        }
     }
 
     /* Fleet KPI Summary Cards */
@@ -303,7 +350,6 @@ st.markdown(
         position: relative;
         overflow: hidden;
         min-height: 96px;
-        width: 100%;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -323,13 +369,13 @@ st.markdown(
     .kpi-high::before { background: #ef4444; }
 
     .kpi-label {
-        font-size: 0.9rem;
+        font-size: 0.9rem; /* ~14.5px */
         font-weight: 600;
         color: #94a3b8;
         letter-spacing: 0.2px;
     }
     .kpi-val {
-        font-size: 2.1rem;
+        font-size: 2.1rem; /* ~34px */
         font-weight: 800;
         color: #f8fafc;
         margin-top: 2px;
@@ -341,6 +387,22 @@ st.markdown(
         margin-top: 2px;
     }
 
+    @media (max-width: 768px) {
+        .kpi-card {
+            padding: 14px 14px !important;
+            min-height: 84px !important;
+        }
+        .kpi-val {
+            font-size: 1.6rem !important;
+        }
+        .kpi-label {
+            font-size: 0.8rem !important;
+        }
+        .kpi-sub {
+            font-size: 0.72rem !important;
+        }
+    }
+
     /* Selected Engine Diagnostic Header Banner */
     .engine-overview-box {
         background: #131d31;
@@ -349,8 +411,6 @@ st.markdown(
         padding: 14px 22px;
         margin-top: 24px;
         margin-bottom: 16px;
-        width: 100%;
-        max-width: 100%;
     }
     .engine-title {
         font-size: 1.08rem;
@@ -371,7 +431,6 @@ st.markdown(
         border-radius: 14px;
         padding: 16px 18px;
         min-height: 98px;
-        width: 100%;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         display: flex;
         flex-direction: column;
@@ -397,6 +456,17 @@ st.markdown(
         margin-top: 2px;
     }
 
+    /* Mobile Styling for Metric Units */
+    @media (max-width: 768px) {
+        .engine-metric-unit {
+            padding: 14px 16px !important;
+            min-height: auto !important;
+        }
+        .engine-metric-val {
+            font-size: 1.45rem !important;
+        }
+    }
+
     /* Dedicated Evaluation Details Panel */
     .evaluation-panel {
         background: rgba(15, 24, 42, 0.85);
@@ -406,7 +476,6 @@ st.markdown(
         padding: 14px 20px;
         margin-top: 16px;
         margin-bottom: 6px;
-        width: 100%;
     }
     .eval-title {
         font-size: 0.82rem;
@@ -431,6 +500,20 @@ st.markdown(
         color: #94a3b8;
         font-size: 0.8rem;
         font-style: italic;
+    }
+    @media (max-width: 768px) {
+        .evaluation-panel {
+            padding: 12px 14px !important;
+        }
+        .eval-metrics-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 6px !important;
+            font-size: 0.85rem !important;
+        }
+        .eval-divider {
+            display: none !important;
+        }
     }
 
     /* Risk Badges */
@@ -475,7 +558,6 @@ st.markdown(
         border-radius: 16px;
         padding: 18px 24px;
         margin: 22px 0 24px 0;
-        width: 100%;
     }
     .rec-card-monitor {
         background: linear-gradient(90deg, rgba(245, 158, 11, 0.09) 0%, #131d31 100%);
@@ -486,7 +568,6 @@ st.markdown(
         border-radius: 16px;
         padding: 18px 24px;
         margin: 22px 0 24px 0;
-        width: 100%;
     }
     .rec-card-high {
         background: linear-gradient(90deg, rgba(239, 68, 68, 0.09) 0%, #131d31 100%);
@@ -497,7 +578,6 @@ st.markdown(
         border-radius: 16px;
         padding: 18px 24px;
         margin: 22px 0 24px 0;
-        width: 100%;
     }
     .rec-headline {
         font-weight: 700;
@@ -510,6 +590,18 @@ st.markdown(
         color: #cbd5e1;
         line-height: 1.6;
     }
+    @media (max-width: 768px) {
+        .rec-card-healthy, .rec-card-monitor, .rec-card-high {
+            padding: 14px 16px !important;
+            margin: 16px 0 !important;
+        }
+        .rec-headline {
+            font-size: 0.96rem !important;
+        }
+        .rec-body {
+            font-size: 0.88rem !important;
+        }
+    }
 
     /* Consistent Analytics Cards */
     .analytics-card-container {
@@ -520,7 +612,6 @@ st.markdown(
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
         margin-bottom: 16px;
         box-sizing: border-box;
-        width: 100%;
     }
     .panel-heading {
         font-size: 1.02rem;
@@ -541,7 +632,19 @@ st.markdown(
         color: #94a3b8;
         line-height: 1.55;
         margin-top: 10px;
-        width: 100%;
+    }
+    @media (max-width: 768px) {
+        .analytics-card-container {
+            padding: 16px 14px !important;
+            border-radius: 14px !important;
+        }
+        .panel-heading {
+            font-size: 0.95rem !important;
+        }
+        .gauge-interpretation-box {
+            padding: 10px 14px !important;
+            font-size: 0.84rem !important;
+        }
     }
 
     /* Workflow Pipeline Process Cards */
@@ -551,7 +654,6 @@ st.markdown(
         gap: 12px;
         margin: 16px 0 20px 0;
         position: relative;
-        width: 100%;
     }
     .workflow-card {
         background: #0f182c;
@@ -564,7 +666,6 @@ st.markdown(
         flex-direction: column;
         justify-content: center;
         min-height: 112px;
-        width: 100%;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
     .workflow-card-num {
@@ -603,6 +704,15 @@ st.markdown(
         justify-content: center;
         z-index: 5;
     }
+    @media (max-width: 900px) {
+        .workflow-grid {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+        }
+        .workflow-arrow-badge {
+            display: none !important;
+        }
+    }
 
     /* Spec details card */
     .spec-block {
@@ -611,7 +721,6 @@ st.markdown(
         border-radius: 14px;
         padding: 18px 20px;
         height: 100%;
-        width: 100%;
         box-sizing: border-box;
     }
     .spec-block-title {
@@ -641,17 +750,21 @@ st.markdown(
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         margin-bottom: 22px;
         box-sizing: border-box;
-        width: 100%;
+    }
+    @media (max-width: 768px) {
+        .urgent-engines-card {
+            padding: 14px 14px !important;
+            border-radius: 14px !important;
+        }
     }
 
-    /* Data Table Styling */
+    /* Table styling */
     .stDataFrame {
         border-radius: 14px;
         overflow: hidden;
-        width: 100% !important;
     }
 
-    /* Touch Targets & UI Controls */
+    /* Touch Targets - 44px Min Height for Mobile Accessibility */
     button[kind="secondary"],
     button[kind="primary"],
     div.stButton > button,
@@ -729,7 +842,6 @@ st.markdown(
         border: 1px solid #1a2742 !important;
         border-radius: 14px !important;
         color-scheme: dark !important;
-        width: 100% !important;
     }
     div[data-testid="stExpander"] summary {
         color: #e8efff !important;
@@ -746,17 +858,27 @@ st.markdown(
         color: #cbd5e1 !important;
     }
 
-    /* Tabs Styling */
+    /* Tabs Horizontal Scroll on Small Screens */
     div[data-testid="stTabs"] {
         width: 100% !important;
         max-width: 100% !important;
+        overflow-x: hidden !important;
     }
     div[data-testid="stTabs"] [data-baseweb="tab-list"] {
         display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: thin !important;
+        scrollbar-color: #1e2d4a transparent !important;
+        padding-bottom: 6px !important;
         gap: 8px !important;
         width: 100% !important;
     }
     div[data-testid="stTabs"] [data-baseweb="tab"] {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
         padding: 10px 16px !important;
         font-size: 0.95rem !important;
         min-height: 44px !important;
@@ -768,6 +890,9 @@ st.markdown(
         color: #38bdf8 !important;
         border-bottom-color: #38bdf8 !important;
     }
+    div[data-testid="stTabs"] {
+        color-scheme: dark !important;
+    }
 
     /* File Uploader */
     div[data-testid="stFileUploader"] section {
@@ -776,399 +901,6 @@ st.markdown(
         color: #e8efff !important;
     }
 
-    /* ========================================================= */
-    /* 3. MOBILE RESPONSIVE RULES ONLY (<= 768px)                */
-    /* ========================================================= */
-    @media screen and (max-width: 768px) {
-        /* Preserve mobile sidebar access */
-        header[data-testid="stHeader"],
-        [data-testid="stHeader"] {
-            background: transparent !important;
-            color-scheme: dark !important;
-            height: 0 !important;
-            min-height: 0 !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border: none !important;
-            overflow: visible !important;
-            pointer-events: none !important;
-            z-index: 99999 !important;
-        }
-
-        /* Fixed, visible, accessible Sidebar Collapsed Control Button on mobile */
-        [data-testid="stSidebarCollapsedControl"],
-        [data-testid="collapsedControl"] {
-            display: flex !important;
-            visibility: visible !important;
-            pointer-events: auto !important;
-            position: fixed !important;
-            top: 12px !important;
-            left: 12px !important;
-            z-index: 1000000 !important;
-            width: 38px !important;
-            height: 38px !important;
-            background: #0d1527 !important;
-            border: 1px solid #38bdf8 !important;
-            border-radius: 10px !important;
-            color: #38bdf8 !important;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 10px rgba(56, 189, 248, 0.25) !important;
-            align-items: center !important;
-            justify-content: center !important;
-            cursor: pointer !important;
-        }
-        [data-testid="stSidebarCollapsedControl"] button,
-        [data-testid="collapsedControl"] button {
-            color: #38bdf8 !important;
-            background: transparent !important;
-            border: none !important;
-            width: 100% !important;
-            height: 100% !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            cursor: pointer !important;
-            padding: 0 !important;
-        }
-        [data-testid="stSidebarCollapsedControl"] svg,
-        [data-testid="collapsedControl"] svg {
-            fill: #38bdf8 !important;
-            color: #38bdf8 !important;
-            stroke: #38bdf8 !important;
-            width: 20px !important;
-            height: 20px !important;
-        }
-
-        /* Mobile Viewport Sizing & Overflow Prevention */
-        html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"],
-        [data-testid="stMain"], .stApp {
-            width: 100% !important;
-            max-width: 100% !important;
-            overflow-x: hidden !important;
-        }
-        [data-testid="stAppViewContainer"] > .main {
-            padding-top: 16px !important;
-            margin-left: 0 !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-        }
-        .block-container {
-            padding-top: 16px !important;
-            padding-bottom: 2.2rem !important;
-            padding-left: 12px !important;
-            padding-right: 12px !important;
-            margin-left: 0 !important;
-            margin-right: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            overflow-x: hidden !important;
-        }
-
-        /* Mobile Overlay Sidebar - 85vw width when opened, 0 width when collapsed */
-        section[data-testid="stSidebar"] {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            height: 100vh !important;
-            z-index: 999999 !important;
-            box-shadow: 6px 0 28px rgba(0, 0, 0, 0.85) !important;
-            transition: transform 0.3s ease, width 0.3s ease !important;
-            background: #090e1c !important;
-        }
-        section[data-testid="stSidebar"][aria-expanded="true"] {
-            width: 85vw !important;
-            min-width: 85vw !important;
-            max-width: 85vw !important;
-            transform: translateX(0) !important;
-            display: block !important;
-        }
-        section[data-testid="stSidebar"][aria-expanded="false"] {
-            width: 0 !important;
-            min-width: 0 !important;
-            max-width: 0 !important;
-            margin-left: 0 !important;
-            transform: translateX(-100%) !important;
-            overflow: hidden !important;
-        }
-
-        /* Mobile Section Headings */
-        h1, h2, h3, .tab-main-heading, .header-main-title {
-            font-size: clamp(1.25rem, 5vw, 1.5rem) !important;
-            line-height: 1.25 !important;
-            overflow-wrap: break-word !important;
-            width: 100% !important;
-            max-width: 100% !important;
-        }
-        .panel-heading, .engine-title, .spec-block-title, h4, h5 {
-            font-size: clamp(1.02rem, 4vw, 1.18rem) !important;
-            line-height: 1.25 !important;
-            overflow-wrap: break-word !important;
-            width: 100% !important;
-            max-width: 100% !important;
-        }
-        .tab-sub-heading {
-            font-size: 0.84rem !important;
-            line-height: 1.4 !important;
-            width: 100% !important;
-        }
-
-        /* Mobile Stacked Hero Header */
-        .header-bar {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            padding: 20px 14px 18px 14px !important;
-            min-height: auto !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            gap: 12px !important;
-            margin-bottom: 16px !important;
-        }
-        .header-content-left {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 8px !important;
-            width: 100% !important;
-            min-width: 0 !important;
-        }
-        .header-brand-row {
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-            width: 100% !important;
-        }
-        .header-icon-badge {
-            width: 40px !important;
-            height: 40px !important;
-            min-width: 40px !important;
-        }
-        .header-text-container {
-            width: 100% !important;
-            min-width: 0 !important;
-        }
-        .header-title-row {
-            width: 100% !important;
-        }
-        .header-subtitle {
-            font-size: 0.92rem !important;
-            line-height: 1.35 !important;
-        }
-        .header-desc-line {
-            font-size: 0.8rem !important;
-            line-height: 1.4 !important;
-            margin-top: 4px !important;
-        }
-        .header-status-slot {
-            width: 100% !important;
-            display: flex !important;
-            margin-top: 4px !important;
-        }
-        .status-pill-online, .status-pill-offline {
-            width: 100% !important;
-            text-align: center !important;
-            justify-content: center !important;
-            font-size: 0.78rem !important;
-            padding: 8px 12px !important;
-        }
-
-        /* Mobile Panels & Cards */
-        .analytics-card-container {
-            padding: 16px 14px !important;
-            border-radius: 14px !important;
-        }
-        .gauge-interpretation-box {
-            padding: 10px 14px !important;
-            font-size: 0.84rem !important;
-        }
-        .urgent-engines-card {
-            padding: 14px 14px !important;
-            border-radius: 14px !important;
-        }
-        .evaluation-panel {
-            padding: 12px 14px !important;
-        }
-        .eval-metrics-row {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 6px !important;
-            font-size: 0.85rem !important;
-        }
-        .eval-divider {
-            display: none !important;
-        }
-        .rec-card-healthy, .rec-card-monitor, .rec-card-high {
-            padding: 14px 16px !important;
-            margin: 16px 0 !important;
-        }
-        .rec-headline {
-            font-size: 0.96rem !important;
-        }
-        .rec-body {
-            font-size: 0.88rem !important;
-        }
-
-        /* Mobile Horizontal Scrollable Tabs with Hidden Scrollbar */
-        div[data-testid="stTabs"] [data-baseweb="tab-list"] {
-            flex-wrap: nowrap !important;
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-            white-space: nowrap !important;
-            -webkit-overflow-scrolling: touch !important;
-            scrollbar-width: none !important;
-            -ms-overflow-style: none !important;
-            padding-bottom: 6px !important;
-        }
-        div[data-testid="stTabs"] [data-baseweb="tab-list"]::-webkit-scrollbar {
-            display: none !important;
-        }
-        div[data-testid="stTabs"] [data-baseweb="tab"] {
-            flex-shrink: 0 !important;
-            white-space: nowrap !important;
-            font-size: 0.92rem !important;
-        }
-
-        /* Mobile Workflow Grid */
-        .workflow-grid {
-            grid-template-columns: 1fr !important;
-            gap: 10px !important;
-        }
-        .workflow-arrow-badge {
-            display: none !important;
-        }
-
-        /* Mobile Column Overrides: Mobile-only layout */
-        /* KPI Cards: 2 cards per row between 601px and 768px */
-        @media (min-width: 601px) {
-            div[data-testid="stHorizontalBlock"]:has(.kpi-card) {
-                display: flex !important;
-                flex-wrap: wrap !important;
-                gap: 12px !important;
-            }
-            div[data-testid="stHorizontalBlock"]:has(.kpi-card) > div[data-testid="column"] {
-                flex: 0 0 calc(50% - 6px) !important;
-                width: calc(50% - 6px) !important;
-                min-width: calc(50% - 6px) !important;
-                max-width: calc(50% - 6px) !important;
-            }
-        }
-
-        /* KPI Cards: 1 card per row below 600px */
-        @media (max-width: 600px) {
-            div[data-testid="stHorizontalBlock"]:has(.kpi-card) {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 10px !important;
-            }
-            div[data-testid="stHorizontalBlock"]:has(.kpi-card) > div[data-testid="column"] {
-                flex: 1 1 100% !important;
-                width: 100% !important;
-                min-width: 100% !important;
-                max-width: 100% !important;
-            }
-        }
-
-        /* Diagnostic Metric Cards: 1 column stack on mobile */
-        div[data-testid="stHorizontalBlock"]:has(.engine-metric-unit) {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 10px !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(.engine-metric-unit) > div[data-testid="column"] {
-            flex: 1 1 100% !important;
-            width: 100% !important;
-            min-width: 100% !important;
-            max-width: 100% !important;
-        }
-
-        /* Generic Column Collapse for Mobile (Plotly charts, spec blocks, radio controls) */
-        div[data-testid="stHorizontalBlock"]:has([data-testid="stPlotlyChart"]),
-        div[data-testid="stHorizontalBlock"]:has(.spec-block),
-        div[data-testid="stHorizontalBlock"]:has([data-testid="stRadio"]) {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 14px !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has([data-testid="stPlotlyChart"]) > div[data-testid="column"],
-        div[data-testid="stHorizontalBlock"]:has(.spec-block) > div[data-testid="column"],
-        div[data-testid="stHorizontalBlock"]:has([data-testid="stRadio"]) > div[data-testid="column"] {
-            flex: 1 1 100% !important;
-            width: 100% !important;
-            min-width: 100% !important;
-            max-width: 100% !important;
-        }
-
-        /* Telemetry Radio Controls - stack vertically on mobile */
-        div[data-testid="stRadio"] > div[role="radiogroup"] {
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 8px !important;
-            width: 100% !important;
-        }
-        div[data-testid="stRadio"] label {
-            width: 100% !important;
-            display: flex !important;
-            align-items: center !important;
-            word-break: break-word !important;
-            white-space: normal !important;
-        }
-
-        /* Telemetry Multiselect Channel Selector */
-        div[data-testid="stMultiSelect"] {
-            width: 100% !important;
-            max-width: 100% !important;
-        }
-        div[data-testid="stMultiSelect"] [data-baseweb="select"] {
-            width: 100% !important;
-            max-width: 100% !important;
-        }
-        div[data-testid="stMultiSelect"] [data-baseweb="tag"] {
-            max-width: calc(100% - 8px) !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            white-space: nowrap !important;
-            display: inline-flex !important;
-            align-items: center !important;
-        }
-        div[data-testid="stMultiSelect"] [data-baseweb="tag"] span[title] {
-            max-width: 180px !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            white-space: nowrap !important;
-            display: inline-block !important;
-        }
-        div[data-testid="stMultiSelect"] [data-baseweb="tag"] [role="presentation"] {
-            flex-shrink: 0 !important;
-            margin-left: 4px !important;
-        }
-
-        /* Mobile Data Tables - Internal Horizontal Scroll and compact typography */
-        [data-testid="stDataFrame"],
-        .stDataFrame {
-            width: 100% !important;
-            max-width: 100% !important;
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-        }
-        [data-testid="stDataFrame"] table,
-        .stDataFrame table {
-            font-size: 0.82rem !important;
-        }
-        [data-testid="stDataFrame"] th,
-        .stDataFrame th {
-            font-size: 0.84rem !important;
-            padding: 6px 8px !important;
-            white-space: nowrap !important;
-            font-weight: 700 !important;
-        }
-        [data-testid="stDataFrame"] td,
-        .stDataFrame td {
-            font-size: 0.82rem !important;
-            padding: 6px 8px !important;
-            white-space: nowrap !important;
-        }
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -1306,9 +1038,9 @@ def build_compact_rul_gauge(predicted_rul: float) -> go.Figure:
                 "borderwidth": 1,
                 "bordercolor": "#1e2d4a",
                 "steps": [
-                    {"range": [0, config.MONITOR_THRESHOLD], "color": "rgba(239, 68, 68, 0.35)"},
-                    {"range": [config.MONITOR_THRESHOLD, config.HEALTHY_THRESHOLD], "color": "rgba(245, 158, 11, 0.35)"},
-                    {"range": [config.HEALTHY_THRESHOLD, config.RUL_CAP], "color": "rgba(16, 185, 129, 0.35)"},
+                    {"range": [0, config.MONITOR_THRESHOLD], "color": "rgba(239, 68, 68, 0.35)"},        # 0-30 High Risk
+                    {"range": [config.MONITOR_THRESHOLD, config.HEALTHY_THRESHOLD], "color": "rgba(245, 158, 11, 0.35)"}, # 31-80 Monitor
+                    {"range": [config.HEALTHY_THRESHOLD, config.RUL_CAP], "color": "rgba(16, 185, 129, 0.35)"},   # 81-125 Healthy
                 ],
                 "threshold": {
                     "line": {"color": "#ef4444", "width": 3},
@@ -1337,32 +1069,15 @@ def plot_sensor_telemetry_clean(
 ) -> go.Figure:
     """
     Renders clean Plotly time-series degradation trends across the full container width.
-    /* Prevent mobile chart label overlap */
     """
     fig = go.Figure()
     
     color_palette = ["#38bdf8", "#f59e0b", "#10b981", "#a855f7", "#ec4899"]
     
-    for idx, s_col in enumerate(sensor_cols[:3]):
+    for idx, s_col in enumerate(sensor_cols[:3]):  # Enforce max 3 sensors
         meta = config.SENSOR_METADATA.get(s_col, {"name": s_col, "unit": ""})
         unit_str = f" [{meta['unit']}]" if meta["unit"] and meta["unit"] != "-" else ""
-        
-        # Concise aeronautical legend label to prevent mobile line-wrapping collision
-        # e.g., HPC Outlet Temp (T30), LPT Outlet Temp (T50), HPC Outlet Pressure (P30)
-        sensor_name = meta.get("name", s_col)
-        short_name = (
-            sensor_name.replace("Temperature", "Temp")
-            .replace("Static Pressure", "Static Press")
-            .replace("Physical Core Speed", "Physical Core Spd")
-            .replace("Physical Fan Speed", "Physical Fan Spd")
-            .replace("Corrected Core Speed", "Corrected Core Spd")
-            .replace("Corrected Fan Speed", "Corrected Fan Spd")
-            .replace("Demanded Corrected Fan Speed", "Demanded Fan Spd")
-            .replace("Demanded Fan Speed", "Demanded Fan Spd")
-            .replace("Ratio of Fuel Flow to Ps30", "Fuel Flow/Ps30")
-        )
-        legend_label = f"{short_name}"
-        full_label = f"{sensor_name} [{s_col}]"
+        friendly_label = f"{meta['name']} [{s_col}]"
         
         raw_values = engine_df[s_col].values
         
@@ -1383,11 +1098,11 @@ def plot_sensor_telemetry_clean(
                 x=engine_df["cycle"],
                 y=y_plot,
                 mode="lines+markers",
-                name=legend_label,
+                name=friendly_label,
                 line=dict(width=2.4, color=color_palette[idx % len(color_palette)]),
-                marker=dict(size=4),
+                marker=dict(size=3.5),
                 customdata=y_hover,
-                hovertemplate="Cycle %{x}<br>" + full_label + ": %{customdata}<extra></extra>",
+                hovertemplate="Cycle %{x}<br>" + friendly_label + ": %{customdata}<extra></extra>",
             )
         )
 
@@ -1402,7 +1117,7 @@ def plot_sensor_telemetry_clean(
         annotation_font=dict(size=11, color="#38bdf8"),
     )
 
-    y_axis_title = "Normalized Trend (0.0 to 1.0)" if normalized_mode else "Raw Sensor Engineering Units"
+    y_axis_title = "Normalized Trend (0.0 to 1.0 Range)" if normalized_mode else "Raw Sensor Engineering Units"
 
     fig.update_layout(
         template="plotly_dark",
@@ -1425,15 +1140,14 @@ def plot_sensor_telemetry_clean(
         ),
         legend=dict(
             orientation="h",
-            yanchor="top",
-            y=-0.22,
+            yanchor="bottom",
+            y=-0.32,
             xanchor="center",
             x=0.5,
             font=dict(size=11, color="#cbd5e1"),
-            itemwidth=30,
         ),
-        height=520,
-        margin=dict(l=50, r=15, t=40, b=150),
+        height=400,
+        margin=dict(l=40, r=15, t=20, b=75),
     )
     return fig
 
@@ -1476,7 +1190,7 @@ def main():
                         <stop offset="75%" stop-color="#38bdf8" stop-opacity="0.85"/>
                         <stop offset="100%" stop-color="#38bdf8" stop-opacity="1.0"/>
                     </linearGradient>
-                    <filter id="pathGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <filter id="pathGlow" x="-10%" y="-10%" width="120%" height="120%">
                         <feGaussianBlur stdDeviation="2" result="blur" />
                         <feMerge>
                             <feMergeNode in="blur" />
@@ -1530,7 +1244,7 @@ def main():
             unsafe_allow_html=True,
         )
 
-    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
 
     # ----------------------------------------------------
     # SIDEBAR: Structured, Consistent Command Panels
@@ -1683,7 +1397,7 @@ def main():
         return
 
     # ----------------------------------------------------
-    # SECTION A: Fleet Summary Strip (Responsive KPI Cards)
+    # SECTION A: Fleet Summary Strip (4 Balanced KPI Cards)
     # ----------------------------------------------------
     total_engines = len(fleet_results)
     healthy_count = (fleet_results["risk_level"] == config.RISK_HEALTHY).sum()
@@ -1924,8 +1638,8 @@ def main():
         with g_col2:
             st.plotly_chart(
                 build_compact_rul_gauge(pred_rul),
-                use_container_width=True,
-                config={"displayModeBar": False, "scrollZoom": False, "responsive": True},
+                width="stretch",
+                config={"displayModeBar": False, "responsive": True},
                 key="diag_rul_gauge",
             )
             st.markdown(
@@ -1992,8 +1706,8 @@ def main():
                     current_cycle=current_cycle,
                     normalized_mode=is_normalized,
                 ),
-                use_container_width=True,
-                config={"displayModeBar": False, "scrollZoom": False, "responsive": True},
+                width="stretch",
+                config={"displayModeBar": False, "responsive": True},
                 key="diag_sensor_telemetry",
             )
         else:
@@ -2042,7 +1756,7 @@ def main():
                 margin=dict(l=15, r=15, t=35, b=15),
                 legend=dict(orientation="h", yanchor="bottom", y=-0.22, xanchor="center", x=0.5, font=dict(size=10.5)),
             )
-            st.plotly_chart(fig_donut, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False, "responsive": True}, key="donut_fleet_risk")
+            st.plotly_chart(fig_donut, width="stretch", config={"displayModeBar": False, "responsive": True}, key="donut_fleet_risk")
 
         with fc2:
             # Sorted Bar Chart
@@ -2058,7 +1772,7 @@ def main():
                     config.RISK_HEALTHY: config.RISK_COLORS[config.RISK_HEALTHY],
                 },
                 title="Fleet RUL Ranking (All 100 Engines)",
-                labels={"engine_id": "Engine ID", "predicted_rul": "Predicted RUL (Cycles)", "risk_level": ""},
+                labels={"engine_id": "Engine ID", "predicted_rul": "Predicted RUL (Cycles)", "risk_level": "Risk Tier"},
             )
             fig_bar.add_hline(y=config.MONITOR_THRESHOLD, line_dash="dash", line_color="#ef4444", annotation_text="High Risk (30)", annotation_font_size=10)
             fig_bar.add_hline(y=config.HEALTHY_THRESHOLD, line_dash="dash", line_color="#10b981", annotation_text="Healthy (80)", annotation_font_size=10)
@@ -2067,39 +1781,11 @@ def main():
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="#080d18",
                 autosize=True,
-                height=360,
-                title=dict(
-                    text="Fleet RUL Ranking (All 100 Engines)",
-                    x=0.02,
-                    xanchor="left",
-                    y=0.96,
-                    yanchor="top",
-                    font=dict(size=18, color="#f8fafc"),
-                ),
-                margin=dict(l=45, r=15, t=115, b=70),
-                legend=dict(
-                    orientation="h",
-                    title_text="",
-                    yanchor="bottom",
-                    y=1.02,
-                    xanchor="left",
-                    x=0.02,
-                    font=dict(size=11, color="#cbd5e1"),
-                ),
-                xaxis=dict(
-                    title=dict(text="Engine ID (Ranked)", font=dict(size=11, color="#94a3b8")),
-                    gridcolor="#152136",
-                    showgrid=False,
-                    tickfont=dict(size=10, color="#cbd5e1"),
-                ),
-                yaxis=dict(
-                    title=dict(text="Predicted RUL (Cycles)", font=dict(size=11, color="#94a3b8")),
-                    gridcolor="#152136",
-                    showgrid=True,
-                    tickfont=dict(size=10, color="#cbd5e1"),
-                ),
+                height=310,
+                margin=dict(l=35, r=15, t=35, b=35),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10.5)),
             )
-            st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False, "responsive": True}, key="bar_fleet_rul")
+            st.plotly_chart(fig_bar, width="stretch", config={"displayModeBar": False, "responsive": True}, key="bar_fleet_rul")
 
         st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
 
@@ -2129,7 +1815,7 @@ def main():
 
         st.dataframe(
             urgent_5[disp_cols].style.map(highlight_risk, subset=["risk_level"]),
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
         )
 
@@ -2153,7 +1839,7 @@ def main():
 
         st.dataframe(
             filtered_fleet[table_cols].style.map(highlight_risk, subset=["risk_level"]),
-            use_container_width=True,
+            width="stretch",
             height=320,
             hide_index=True,
         )
