@@ -3,6 +3,7 @@ Streamlit Web Dashboard for TurboLife AI.
 Refined Turbofan Engine RUL Command Center & Predictive Maintenance Platform.
 Optimized with Streamlit @st.cache_resource and @st.cache_data for instant sub-second re-renders,
 zero redundant model reloads, and persistent fleet-level inference caching.
+Fully responsive across mobile (375px, 390px, 414px), tablet (600px-900px), and desktop displays.
 """
 
 import os
@@ -25,19 +26,26 @@ import model as model_module
 import predict as predict_module
 
 # ==========================================
-# 1. Streamlit Page Configuration & Premium Aviation Theme
+# 1. Streamlit Page Configuration
 # ==========================================
 st.set_page_config(
     page_title="TurboLife AI – Turbofan Engine RUL Command Center",
     page_icon="✈️",
     layout="wide",
-    initial_sidebar_state="auto",
+    initial_sidebar_state="collapsed",
 )
 
-# Custom High-End Aviation CSS Theme
+# Custom High-End Aviation CSS Theme with TurboLife mobile responsive layout
 st.markdown(
     """
     <style>
+    /* TurboLife mobile responsive layout */
+
+    /* Global box-sizing */
+    *, *::before, *::after {
+        box-sizing: border-box !important;
+    }
+
     /* Clean Chrome: Hide deploy button, hamburger menu and footer only */
     .stDeployButton,
     .stAppDeployButton,
@@ -53,12 +61,12 @@ st.markdown(
 
     /* Force Dark Color Rendering Globally Across Browser & System Modes */
     html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"],
-    [data-testid="stHeader"], [data-testid="stToolbar"],
     [data-testid="stMain"], .stApp {
         background: #060a14 !important;
         color: #e8efff !important;
         color-scheme: dark !important;
-        max-width: 100vw !important;
+        width: 100% !important;
+        max-width: 100% !important;
         overflow-x: hidden !important;
     }
 
@@ -73,10 +81,6 @@ st.markdown(
         margin: 0 !important;
         border: none !important;
         background: transparent !important;
-    }
-
-    [data-testid="stAppViewContainer"] > .main {
-        padding-top: 16px !important;
     }
 
     /* Keep Sidebar visible, styled, and responsive */
@@ -97,13 +101,20 @@ st.markdown(
         color: #38bdf8 !important;
     }
 
-    /* Global Typography */
+    /* Global Typography & Word Wrapping */
     .stApp {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
+    h1, h2, h3, h4, h5, h6, p, span, div, label {
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+    }
 
-    /* Responsive Main Content Container - 16px breathing space */
+    /* Desktop Main Container */
     @media (min-width: 769px) {
+        [data-testid="stAppViewContainer"] > .main {
+            padding-top: 16px !important;
+        }
         .block-container {
             padding-top: 16px !important;
             padding-bottom: 3rem !important;
@@ -111,21 +122,237 @@ st.markdown(
             padding-right: 2.4rem !important;
             max-width: 1480px;
         }
+        .header-bar {
+            padding: 48px 32px 24px 32px !important;
+            min-height: 140px !important;
+            margin-bottom: 24px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+        }
+        .header-content-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 18px !important;
+        }
+        .header-brand-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 14px !important;
+        }
+        .header-subtitle::before {
+            content: "|";
+            color: #475569;
+            font-weight: 300;
+            margin-right: 12px;
+            margin-left: 2px;
+        }
     }
+
+    /* Mobile Responsive Layout (< 768px) */
     @media (max-width: 768px) {
+        [data-testid="stAppViewContainer"] > .main {
+            padding-top: 16px !important;
+            margin-left: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
         .block-container {
             padding-top: 16px !important;
             padding-bottom: 2.2rem !important;
-            padding-left: 14px !important;
-            padding-right: 14px !important;
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            width: 100% !important;
             max-width: 100% !important;
+            overflow-x: hidden !important;
         }
+
+        /* Mobile Overlay Sidebar - 85vw width when opened, 0 width when collapsed */
         section[data-testid="stSidebar"] {
-            width: 88vw !important;
-            min-width: 88vw !important;
-            max-width: 95vw !important;
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.6) !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            height: 100vh !important;
             z-index: 999999 !important;
+            box-shadow: 6px 0 28px rgba(0, 0, 0, 0.75) !important;
+            transition: transform 0.3s ease, width 0.3s ease !important;
+        }
+        section[data-testid="stSidebar"][aria-expanded="true"] {
+            width: 85vw !important;
+            min-width: 85vw !important;
+            max-width: 85vw !important;
+        }
+        section[data-testid="stSidebar"][aria-expanded="false"] {
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            margin-left: 0 !important;
+        }
+
+        /* Floating Sidebar Toggle Button */
+        [data-testid="stSidebarCollapsedControl"] {
+            position: fixed !important;
+            top: 12px !important;
+            left: 12px !important;
+            z-index: 1000000 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 40px !important;
+            height: 40px !important;
+            background: #0d1527 !important;
+            border: 1px solid #1e2d4a !important;
+            border-radius: 10px !important;
+            color: #38bdf8 !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+        }
+        [data-testid="stSidebarCollapsedControl"] button {
+            color: #38bdf8 !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Mobile Stacked Hero Header */
+        .header-bar {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            padding: 20px 14px 18px 14px !important;
+            min-height: auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            gap: 12px !important;
+            margin-bottom: 16px !important;
+            overflow-wrap: anywhere !important;
+        }
+        .header-content-left {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 8px !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        .header-brand-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            width: 100% !important;
+        }
+        .header-icon-badge {
+            width: 40px !important;
+            height: 40px !important;
+            min-width: 40px !important;
+        }
+        .header-main-title {
+            font-size: 1.35rem !important;
+            overflow-wrap: anywhere !important;
+        }
+        .header-text-container {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        .header-title-row {
+            width: 100% !important;
+        }
+        .header-subtitle {
+            font-size: 0.92rem !important;
+            line-height: 1.35 !important;
+            overflow-wrap: anywhere !important;
+        }
+        .header-desc-line {
+            font-size: 0.8rem !important;
+            line-height: 1.4 !important;
+            margin-top: 4px !important;
+            overflow-wrap: anywhere !important;
+        }
+        .header-status-slot {
+            width: 100% !important;
+            display: flex !important;
+            margin-top: 4px !important;
+        }
+        .status-pill-online, .status-pill-offline {
+            width: 100% !important;
+            text-align: center !important;
+            justify-content: center !important;
+            font-size: 0.78rem !important;
+            padding: 8px 12px !important;
+        }
+
+        /* Mobile Headings & Panels */
+        .tab-main-heading {
+            font-size: 1.2rem !important;
+        }
+        .tab-sub-heading {
+            font-size: 0.84rem !important;
+        }
+        .analytics-card-container {
+            padding: 16px 14px !important;
+            border-radius: 14px !important;
+        }
+        .panel-heading {
+            font-size: 0.95rem !important;
+        }
+        .gauge-interpretation-box {
+            padding: 10px 14px !important;
+            font-size: 0.84rem !important;
+        }
+        .urgent-engines-card {
+            padding: 14px 14px !important;
+            border-radius: 14px !important;
+        }
+        .evaluation-panel {
+            padding: 12px 14px !important;
+        }
+        .eval-metrics-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 6px !important;
+            font-size: 0.85rem !important;
+        }
+        .eval-divider {
+            display: none !important;
+        }
+        .rec-card-healthy, .rec-card-monitor, .rec-card-high {
+            padding: 14px 16px !important;
+            margin: 16px 0 !important;
+        }
+        .rec-headline {
+            font-size: 0.96rem !important;
+        }
+        .rec-body {
+            font-size: 0.88rem !important;
+        }
+
+        /* Mobile Column Collapse for Plotly and Controls */
+        div[data-testid="stHorizontalBlock"]:has([data-testid="stPlotlyChart"]),
+        div[data-testid="stHorizontalBlock"]:has(.spec-block),
+        div[data-testid="stHorizontalBlock"]:has([data-testid="stRadio"]) {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 14px !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has([data-testid="stPlotlyChart"]) > div[data-testid="column"],
+        div[data-testid="stHorizontalBlock"]:has(.spec-block) > div[data-testid="column"],
+        div[data-testid="stHorizontalBlock"]:has([data-testid="stRadio"]) > div[data-testid="column"] {
+            width: 100% !important;
+            min-width: 100% !important;
+        }
+
+        /* Single column for Engine Diagnostic Metric Units */
+        div[data-testid="stHorizontalBlock"]:has(.engine-metric-unit) {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            width: 100% !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(.engine-metric-unit) > div[data-testid="column"] {
+            width: 100% !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
         }
     }
 
@@ -169,16 +396,11 @@ st.markdown(
         background: radial-gradient(ellipse at 18% 30%, rgba(56, 189, 248, 0.09) 0%, transparent 60%), linear-gradient(135deg, #101a2e 0%, #0c1322 100%);
         border: 1px solid rgba(56, 189, 248, 0.22);
         border-radius: 16px;
-        padding: 48px 32px 24px 32px;
         margin-top: 0;
         margin-bottom: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.32);
         box-sizing: border-box;
         overflow: hidden;
-        min-height: 140px;
         width: 100%;
     }
     .header-flight-path {
@@ -190,18 +412,6 @@ st.markdown(
         pointer-events: none;
         z-index: 1;
         overflow: visible;
-    }
-    .header-content-left {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        gap: 18px;
-    }
-    .header-brand-row {
-        display: flex;
-        align-items: center;
-        gap: 14px;
     }
     .header-icon-badge {
         width: 48px;
@@ -227,7 +437,7 @@ st.markdown(
         gap: 6px;
     }
     .header-main-title {
-        font-size: 1.75rem; /* ~28px */
+        font-size: 1.75rem;
         font-weight: 800;
         color: #38bdf8;
         letter-spacing: -0.3px;
@@ -278,86 +488,55 @@ st.markdown(
         flex-shrink: 0;
     }
 
-    /* Desktop Subtitle Divider */
-    @media (min-width: 769px) {
-        .header-subtitle::before {
-            content: "|";
-            color: #475569;
-            font-weight: 300;
-            margin-right: 12px;
-            margin-left: 2px;
-        }
-    }
-
-    /* Mobile Header Stacking */
-    @media (max-width: 768px) {
-        .header-bar {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            padding: 20px 16px 18px 16px !important;
-            min-height: auto !important;
-            gap: 14px !important;
-        }
-        .header-content-left {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 10px !important;
-            width: 100% !important;
-        }
-        .header-brand-row {
-            display: flex !important;
-            align-items: center !important;
-            gap: 12px !important;
-            width: 100% !important;
-        }
-        .header-main-title {
-            font-size: 1.5rem !important;
-        }
-        .header-subtitle {
-            font-size: 1rem !important;
-        }
-        .header-desc-line {
-            font-size: 0.84rem !important;
-        }
-        .header-status-slot {
-            width: 100% !important;
-            display: flex !important;
-            justify-content: flex-start !important;
-        }
-        .status-pill-online, .status-pill-offline {
-            width: 100% !important;
-            justify-content: center !important;
-            box-sizing: border-box !important;
-        }
-    }
-
     /* Tab Page Headers */
     .tab-header-box {
         margin-bottom: 20px;
         padding-top: 6px;
     }
     .tab-main-heading {
-        font-size: 1.45rem; /* ~23px */
+        font-size: 1.45rem;
         font-weight: 800;
         color: #f8fafc;
         letter-spacing: -0.3px;
         margin-bottom: 4px;
     }
     .tab-sub-heading {
-        font-size: 0.95rem; /* ~15px */
+        font-size: 0.95rem;
         color: #94a3b8;
         line-height: 1.45;
     }
-    @media (max-width: 768px) {
-        .tab-main-heading {
-            font-size: 1.25rem !important;
-        }
-        .tab-sub-heading {
-            font-size: 0.86rem !important;
+
+    /* Fleet KPI Summary Cards Responsive Grid */
+    @media (min-width: 901px) {
+        div[data-testid="stHorizontalBlock"]:has(.kpi-card) {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 16px !important;
+            width: 100% !important;
         }
     }
+    @media (min-width: 601px) and (max-width: 900px) {
+        div[data-testid="stHorizontalBlock"]:has(.kpi-card) {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+            width: 100% !important;
+        }
+    }
+    @media (max-width: 600px) {
+        div[data-testid="stHorizontalBlock"]:has(.kpi-card) {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            width: 100% !important;
+        }
+    }
+    div[data-testid="stHorizontalBlock"]:has(.kpi-card) > div[data-testid="column"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+    }
 
-    /* Fleet KPI Summary Cards */
     .kpi-card {
         background: linear-gradient(145deg, #101a2e 0%, #0c1322 100%);
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -368,6 +547,8 @@ st.markdown(
         position: relative;
         overflow: hidden;
         min-height: 96px;
+        width: 100% !important;
+        min-width: 0 !important;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -387,13 +568,13 @@ st.markdown(
     .kpi-high::before { background: #ef4444; }
 
     .kpi-label {
-        font-size: 0.9rem; /* ~14.5px */
+        font-size: 0.9rem;
         font-weight: 600;
         color: #94a3b8;
         letter-spacing: 0.2px;
     }
     .kpi-val {
-        font-size: 2.1rem; /* ~34px */
+        font-size: 2.1rem;
         font-weight: 800;
         color: #f8fafc;
         margin-top: 2px;
@@ -405,39 +586,6 @@ st.markdown(
         margin-top: 2px;
     }
 
-    /* Mobile KPI Card 2x2 Grid Conversion */
-    @media (max-width: 768px) {
-        div[data-testid="stHorizontalBlock"]:has(.kpi-card) {
-            display: grid !important;
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 12px !important;
-            width: 100% !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(.kpi-card) > div[data-testid="column"] {
-            width: 100% !important;
-            min-width: 0 !important;
-            flex: 1 1 auto !important;
-        }
-        .kpi-card {
-            padding: 14px 14px !important;
-            min-height: 84px !important;
-        }
-        .kpi-val {
-            font-size: 1.6rem !important;
-        }
-        .kpi-label {
-            font-size: 0.8rem !important;
-        }
-        .kpi-sub {
-            font-size: 0.72rem !important;
-        }
-    }
-    @media (max-width: 380px) {
-        div[data-testid="stHorizontalBlock"]:has(.kpi-card) {
-            grid-template-columns: 1fr !important;
-        }
-    }
-
     /* Selected Engine Diagnostic Header Banner */
     .engine-overview-box {
         background: #131d31;
@@ -446,6 +594,8 @@ st.markdown(
         padding: 14px 22px;
         margin-top: 24px;
         margin-bottom: 16px;
+        width: 100%;
+        max-width: 100%;
     }
     .engine-title {
         font-size: 1.08rem;
@@ -466,6 +616,8 @@ st.markdown(
         border-radius: 14px;
         padding: 16px 18px;
         min-height: 98px;
+        width: 100%;
+        min-width: 0;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         display: flex;
         flex-direction: column;
@@ -491,28 +643,6 @@ st.markdown(
         margin-top: 2px;
     }
 
-    /* Mobile Single-Column Stack for Metric Units */
-    @media (max-width: 768px) {
-        div[data-testid="stHorizontalBlock"]:has(.engine-metric-unit) {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-            gap: 10px !important;
-            width: 100% !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(.engine-metric-unit) > div[data-testid="column"] {
-            width: 100% !important;
-            min-width: 0 !important;
-            flex: 1 1 auto !important;
-        }
-        .engine-metric-unit {
-            padding: 14px 16px !important;
-            min-height: auto !important;
-        }
-        .engine-metric-val {
-            font-size: 1.45rem !important;
-        }
-    }
-
     /* Dedicated Evaluation Details Panel */
     .evaluation-panel {
         background: rgba(15, 24, 42, 0.85);
@@ -522,6 +652,7 @@ st.markdown(
         padding: 14px 20px;
         margin-top: 16px;
         margin-bottom: 6px;
+        width: 100%;
     }
     .eval-title {
         font-size: 0.82rem;
@@ -546,20 +677,6 @@ st.markdown(
         color: #94a3b8;
         font-size: 0.8rem;
         font-style: italic;
-    }
-    @media (max-width: 768px) {
-        .evaluation-panel {
-            padding: 12px 14px !important;
-        }
-        .eval-metrics-row {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 6px !important;
-            font-size: 0.85rem !important;
-        }
-        .eval-divider {
-            display: none !important;
-        }
     }
 
     /* Risk Badges */
@@ -604,6 +721,7 @@ st.markdown(
         border-radius: 16px;
         padding: 18px 24px;
         margin: 22px 0 24px 0;
+        width: 100%;
     }
     .rec-card-monitor {
         background: linear-gradient(90deg, rgba(245, 158, 11, 0.09) 0%, #131d31 100%);
@@ -614,6 +732,7 @@ st.markdown(
         border-radius: 16px;
         padding: 18px 24px;
         margin: 22px 0 24px 0;
+        width: 100%;
     }
     .rec-card-high {
         background: linear-gradient(90deg, rgba(239, 68, 68, 0.09) 0%, #131d31 100%);
@@ -624,6 +743,7 @@ st.markdown(
         border-radius: 16px;
         padding: 18px 24px;
         margin: 22px 0 24px 0;
+        width: 100%;
     }
     .rec-headline {
         font-weight: 700;
@@ -636,18 +756,6 @@ st.markdown(
         color: #cbd5e1;
         line-height: 1.6;
     }
-    @media (max-width: 768px) {
-        .rec-card-healthy, .rec-card-monitor, .rec-card-high {
-            padding: 14px 16px !important;
-            margin: 16px 0 !important;
-        }
-        .rec-headline {
-            font-size: 0.96rem !important;
-        }
-        .rec-body {
-            font-size: 0.88rem !important;
-        }
-    }
 
     /* Consistent Analytics Cards */
     .analytics-card-container {
@@ -658,6 +766,7 @@ st.markdown(
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
         margin-bottom: 16px;
         box-sizing: border-box;
+        width: 100%;
     }
     .panel-heading {
         font-size: 1.02rem;
@@ -678,19 +787,7 @@ st.markdown(
         color: #94a3b8;
         line-height: 1.55;
         margin-top: 10px;
-    }
-    @media (max-width: 768px) {
-        .analytics-card-container {
-            padding: 16px 14px !important;
-            border-radius: 14px !important;
-        }
-        .panel-heading {
-            font-size: 0.95rem !important;
-        }
-        .gauge-interpretation-box {
-            padding: 10px 14px !important;
-            font-size: 0.84rem !important;
-        }
+        width: 100%;
     }
 
     /* Workflow Pipeline Process Cards */
@@ -700,6 +797,7 @@ st.markdown(
         gap: 12px;
         margin: 16px 0 20px 0;
         position: relative;
+        width: 100%;
     }
     .workflow-card {
         background: #0f182c;
@@ -712,6 +810,7 @@ st.markdown(
         flex-direction: column;
         justify-content: center;
         min-height: 112px;
+        width: 100%;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
     .workflow-card-num {
@@ -767,6 +866,7 @@ st.markdown(
         border-radius: 14px;
         padding: 18px 20px;
         height: 100%;
+        width: 100%;
         box-sizing: border-box;
     }
     .spec-block-title {
@@ -796,18 +896,14 @@ st.markdown(
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         margin-bottom: 22px;
         box-sizing: border-box;
-    }
-    @media (max-width: 768px) {
-        .urgent-engines-card {
-            padding: 14px 14px !important;
-            border-radius: 14px !important;
-        }
+        width: 100%;
     }
 
     /* Table styling */
     .stDataFrame {
         border-radius: 14px;
         overflow: hidden;
+        width: 100% !important;
     }
 
     /* Touch Targets - 44px Min Height for Mobile Accessibility */
@@ -888,6 +984,7 @@ st.markdown(
         border: 1px solid #1a2742 !important;
         border-radius: 14px !important;
         color-scheme: dark !important;
+        width: 100% !important;
     }
     div[data-testid="stExpander"] summary {
         color: #e8efff !important;
@@ -904,7 +1001,7 @@ st.markdown(
         color: #cbd5e1 !important;
     }
 
-    /* Tabs Horizontal Scroll on Small Screens */
+    /* Single Horizontal Scrollable Row for Tabs with Hidden Scrollbar */
     div[data-testid="stTabs"] {
         width: 100% !important;
         max-width: 100% !important;
@@ -915,18 +1012,22 @@ st.markdown(
         flex-wrap: nowrap !important;
         overflow-x: auto !important;
         overflow-y: hidden !important;
+        white-space: nowrap !important;
         -webkit-overflow-scrolling: touch !important;
-        scrollbar-width: thin !important;
-        scrollbar-color: #1e2d4a transparent !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
         padding-bottom: 6px !important;
         gap: 8px !important;
         width: 100% !important;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab-list"]::-webkit-scrollbar {
+        display: none !important;
     }
     div[data-testid="stTabs"] [data-baseweb="tab"] {
         flex-shrink: 0 !important;
         white-space: nowrap !important;
         padding: 10px 16px !important;
-        font-size: 0.95rem !important;
+        font-size: 0.92rem !important;
         min-height: 44px !important;
         color: #94a3b8 !important;
         background-color: transparent !important;
@@ -945,23 +1046,6 @@ st.markdown(
         background-color: #0d1527 !important;
         border-color: #1a2742 !important;
         color: #e8efff !important;
-    }
-
-    /* Responsive Column Collapse on Mobile */
-    @media (max-width: 768px) {
-        div[data-testid="stHorizontalBlock"]:has([data-testid="stPlotlyChart"]),
-        div[data-testid="stHorizontalBlock"]:has(.spec-block),
-        div[data-testid="stHorizontalBlock"]:has([data-testid="stRadio"]) {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 14px !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has([data-testid="stPlotlyChart"]) > div[data-testid="column"],
-        div[data-testid="stHorizontalBlock"]:has(.spec-block) > div[data-testid="column"],
-        div[data-testid="stHorizontalBlock"]:has([data-testid="stRadio"]) > div[data-testid="column"] {
-            width: 100% !important;
-            min-width: 100% !important;
-        }
     }
     </style>
     """,
@@ -1100,9 +1184,9 @@ def build_compact_rul_gauge(predicted_rul: float) -> go.Figure:
                 "borderwidth": 1,
                 "bordercolor": "#1e2d4a",
                 "steps": [
-                    {"range": [0, config.MONITOR_THRESHOLD], "color": "rgba(239, 68, 68, 0.35)"},        # 0-30 High Risk
-                    {"range": [config.MONITOR_THRESHOLD, config.HEALTHY_THRESHOLD], "color": "rgba(245, 158, 11, 0.35)"}, # 31-80 Monitor
-                    {"range": [config.HEALTHY_THRESHOLD, config.RUL_CAP], "color": "rgba(16, 185, 129, 0.35)"},   # 81-125 Healthy
+                    {"range": [0, config.MONITOR_THRESHOLD], "color": "rgba(239, 68, 68, 0.35)"},
+                    {"range": [config.MONITOR_THRESHOLD, config.HEALTHY_THRESHOLD], "color": "rgba(245, 158, 11, 0.35)"},
+                    {"range": [config.HEALTHY_THRESHOLD, config.RUL_CAP], "color": "rgba(16, 185, 129, 0.35)"},
                 ],
                 "threshold": {
                     "line": {"color": "#ef4444", "width": 3},
@@ -1136,7 +1220,7 @@ def plot_sensor_telemetry_clean(
     
     color_palette = ["#38bdf8", "#f59e0b", "#10b981", "#a855f7", "#ec4899"]
     
-    for idx, s_col in enumerate(sensor_cols[:3]):  # Enforce max 3 sensors
+    for idx, s_col in enumerate(sensor_cols[:3]):
         meta = config.SENSOR_METADATA.get(s_col, {"name": s_col, "unit": ""})
         unit_str = f" [{meta['unit']}]" if meta["unit"] and meta["unit"] != "-" else ""
         friendly_label = f"{meta['name']} [{s_col}]"
@@ -1208,8 +1292,8 @@ def plot_sensor_telemetry_clean(
             x=0.5,
             font=dict(size=11, color="#cbd5e1"),
         ),
-        height=400,
-        margin=dict(l=40, r=15, t=20, b=75),
+        height=380,
+        margin=dict(l=35, r=15, t=20, b=75),
     )
     return fig
 
@@ -1306,7 +1390,7 @@ def main():
             unsafe_allow_html=True,
         )
 
-    st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
     # ----------------------------------------------------
     # SIDEBAR: Structured, Consistent Command Panels
@@ -1459,7 +1543,7 @@ def main():
         return
 
     # ----------------------------------------------------
-    # SECTION A: Fleet Summary Strip (4 Balanced KPI Cards)
+    # SECTION A: Fleet Summary Strip (Responsive KPI Cards)
     # ----------------------------------------------------
     total_engines = len(fleet_results)
     healthy_count = (fleet_results["risk_level"] == config.RISK_HEALTHY).sum()
@@ -1700,7 +1784,7 @@ def main():
         with g_col2:
             st.plotly_chart(
                 build_compact_rul_gauge(pred_rul),
-                width="stretch",
+                use_container_width=True,
                 config={"displayModeBar": False, "responsive": True},
                 key="diag_rul_gauge",
             )
@@ -1768,7 +1852,7 @@ def main():
                     current_cycle=current_cycle,
                     normalized_mode=is_normalized,
                 ),
-                width="stretch",
+                use_container_width=True,
                 config={"displayModeBar": False, "responsive": True},
                 key="diag_sensor_telemetry",
             )
@@ -1814,11 +1898,11 @@ def main():
                 template="plotly_dark",
                 paper_bgcolor="rgba(0,0,0,0)",
                 autosize=True,
-                height=300,
+                height=290,
                 margin=dict(l=15, r=15, t=35, b=15),
                 legend=dict(orientation="h", yanchor="bottom", y=-0.22, xanchor="center", x=0.5, font=dict(size=10.5)),
             )
-            st.plotly_chart(fig_donut, width="stretch", config={"displayModeBar": False, "responsive": True}, key="donut_fleet_risk")
+            st.plotly_chart(fig_donut, use_container_width=True, config={"displayModeBar": False, "responsive": True}, key="donut_fleet_risk")
 
         with fc2:
             # Sorted Bar Chart
@@ -1843,11 +1927,11 @@ def main():
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="#080d18",
                 autosize=True,
-                height=310,
+                height=300,
                 margin=dict(l=35, r=15, t=35, b=35),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10.5)),
             )
-            st.plotly_chart(fig_bar, width="stretch", config={"displayModeBar": False, "responsive": True}, key="bar_fleet_rul")
+            st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar": False, "responsive": True}, key="bar_fleet_rul")
 
         st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
 
@@ -1877,7 +1961,7 @@ def main():
 
         st.dataframe(
             urgent_5[disp_cols].style.map(highlight_risk, subset=["risk_level"]),
-            width="stretch",
+            use_container_width=True,
             hide_index=True,
         )
 
@@ -1901,7 +1985,7 @@ def main():
 
         st.dataframe(
             filtered_fleet[table_cols].style.map(highlight_risk, subset=["risk_level"]),
-            width="stretch",
+            use_container_width=True,
             height=320,
             hide_index=True,
         )
