@@ -62,12 +62,15 @@ st.markdown(
         overflow-x: hidden !important;
     }
 
-    /* Fix Streamlit Top Header/Toolbar: Never White */
+    /* Streamlit Top Header: Transparent and compact (44px) so native controls remain accessible without overlapping the hero card */
     header[data-testid="stHeader"],
     [data-testid="stHeader"],
     [data-testid="stToolbar"] {
-        background-color: #060a14 !important;
-        border-bottom: 1px solid #16233d !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        border-bottom: none !important;
+        height: 44px !important;
+        z-index: 999990 !important;
     }
 
     /* Keep Sidebar visible, styled, and responsive */
@@ -81,9 +84,8 @@ st.markdown(
     }
 
     /* Ensure Collapse / Expand toggle buttons are styled in cyan and visible */
-    [data-testid="stSidebarCollapseButton"] button {
-        color: #38bdf8 !important;
-    }
+    [data-testid="stSidebarCollapseButton"] button,
+    [data-testid="stSidebarCollapsedControl"] button,
     [data-testid="stSidebarCollapsedControl"] {
         color: #38bdf8 !important;
     }
@@ -93,10 +95,10 @@ st.markdown(
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* Responsive Main Content Container */
+    /* Prevent header overlap: Position hero below compact 44px header with 12-16px clearance */
     @media (min-width: 769px) {
         .block-container {
-            padding-top: 1.6rem !important;
+            padding-top: 58px !important;
             padding-bottom: 3rem !important;
             padding-left: 2.4rem !important;
             padding-right: 2.4rem !important;
@@ -105,7 +107,7 @@ st.markdown(
     }
     @media (max-width: 768px) {
         .block-container {
-            padding-top: 1rem !important;
+            padding-top: 56px !important;
             padding-bottom: 2.2rem !important;
             padding-left: 14px !important;
             padding-right: 14px !important;
