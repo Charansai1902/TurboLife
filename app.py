@@ -62,12 +62,21 @@ st.markdown(
         overflow-x: hidden !important;
     }
 
-    /* Fix Streamlit Top Header/Toolbar: Never White */
-    header[data-testid="stHeader"],
+    /* Remove unused Streamlit toolbar space */
     [data-testid="stHeader"],
+    header[data-testid="stHeader"],
     [data-testid="stToolbar"] {
-        background-color: #060a14 !important;
-        border-bottom: 1px solid #16233d !important;
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    [data-testid="stAppViewContainer"] > .main {
+        padding-top: 16px !important;
     }
 
     /* Keep Sidebar visible, styled, and responsive */
@@ -93,10 +102,10 @@ st.markdown(
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* Responsive Main Content Container */
+    /* Responsive Main Content Container - 16px breathing space */
     @media (min-width: 769px) {
         .block-container {
-            padding-top: 1.6rem !important;
+            padding-top: 16px !important;
             padding-bottom: 3rem !important;
             padding-left: 2.4rem !important;
             padding-right: 2.4rem !important;
@@ -105,7 +114,7 @@ st.markdown(
     }
     @media (max-width: 768px) {
         .block-container {
-            padding-top: 1rem !important;
+            padding-top: 16px !important;
             padding-bottom: 2.2rem !important;
             padding-left: 14px !important;
             padding-right: 14px !important;
@@ -154,13 +163,14 @@ st.markdown(
         line-height: 1.45;
     }
 
-    /* Header Card - Curved Flight Path & Responsive Stacking */
+    /* Prevent header glow from being clipped */
     .header-bar {
         position: relative;
         background: radial-gradient(ellipse at 18% 30%, rgba(56, 189, 248, 0.09) 0%, transparent 60%), linear-gradient(135deg, #101a2e 0%, #0c1322 100%);
         border: 1px solid rgba(56, 189, 248, 0.22);
         border-radius: 16px;
         padding: 48px 32px 24px 32px;
+        margin-top: 0;
         margin-bottom: 24px;
         display: flex;
         align-items: center;
@@ -179,6 +189,7 @@ st.markdown(
         height: 100%;
         pointer-events: none;
         z-index: 1;
+        overflow: visible;
     }
     .header-content-left {
         position: relative;
@@ -1241,7 +1252,7 @@ def main():
                         <stop offset="75%" stop-color="#38bdf8" stop-opacity="0.85"/>
                         <stop offset="100%" stop-color="#38bdf8" stop-opacity="1.0"/>
                     </linearGradient>
-                    <filter id="pathGlow" x="-10%" y="-10%" width="120%" height="120%">
+                    <filter id="pathGlow" x="-20%" y="-20%" width="140%" height="140%">
                         <feGaussianBlur stdDeviation="2" result="blur" />
                         <feMerge>
                             <feMergeNode in="blur" />
